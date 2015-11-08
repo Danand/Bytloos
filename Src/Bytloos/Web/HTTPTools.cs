@@ -771,6 +771,7 @@ namespace Bytloos.Web
         private HttpWebRequest BuildRequest(string url, Dictionary<string, string> headers = null)
         {
             var request = (HttpWebRequest)WebRequest.Create(url);
+
             request.Proxy = this.currentProxy ?? request.Proxy;
 
             if (headers != null)

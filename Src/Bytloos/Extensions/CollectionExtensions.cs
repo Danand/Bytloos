@@ -104,5 +104,33 @@ namespace Bytloos.Extensions
 
             return nameValueCollection;
         }
+
+        /// <summary>
+        /// Pushes collection to a stack.
+        /// </summary>
+        /// <typeparam name="T">Type of object.</typeparam>
+        /// <param name="source">Source stack.</param>
+        /// <param name="collection">Collection of objects.</param>
+        public static void PushRange<T>(this Stack<T> source, IEnumerable<T> collection)
+        {
+            foreach (var item in collection)
+                source.Push(item);
+        }
+
+        /// <summary>
+        /// Converts enumeration to a stack.
+        /// </summary>
+        /// <typeparam name="T">Type of object.</typeparam>
+        /// <param name="source">Source stack.</param>
+        /// <returns>Result stack.</returns>
+        public static Stack<T> ToStack<T>(this IEnumerable<T> source)
+        {
+            var result = new Stack<T>();
+
+            foreach (var item in source)
+                result.Push(item);
+
+            return result;
+        }
     }
 }
