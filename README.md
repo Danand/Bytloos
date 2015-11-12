@@ -11,4 +11,6 @@ So there are some tools for more flexible bydlocoding development:
 * CSV serializer;
 * and some useful extension methods and utilities.
 
-Bytloos .dll is available [here](https://github.com/Danand/Bytloos/raw/master/Build/NET40/Bytloos.dll).
+Bytloos .dll downloads:
+* [for .NET Framework 4.0 (full)](https://github.com/Danand/Bytloos/raw/master/Build/NET40/Bytloos.dll);
+* [for .NET Framework 4.5](https://github.com/Danand/Bytloos/raw/master/Build/NET45/Bytloos.dll).
