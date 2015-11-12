@@ -8,6 +8,7 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Web;
 
 namespace Bytloos.Web
@@ -160,11 +161,11 @@ namespace Bytloos.Web
         /// <returns>Response string.</returns>
         public string Get(
             string                      url,
-            Dictionary<string, string>  parameters = null,
-            CookieContainer             cookies = null,
-            Dictionary<string, string>  headers = null,
-            Encoding                    encoding = null,
-            int                         tryTimes = 0)
+            Dictionary<string, string>  parameters  = null,
+            CookieContainer             cookies     = null,
+            Dictionary<string, string>  headers     = null,
+            Encoding                    encoding    = null,
+            int                         tryTimes    = 0)
         {
             try
             {
@@ -279,12 +280,12 @@ namespace Bytloos.Web
         /// <returns>Response string.</returns>
         public string Post(
             string                      url,
-            Dictionary<string, string>  parameters = null,
-            string                      rawData = null,
-            CookieContainer             cookies = null,
-            Dictionary<string, string>  headers = null,
-            Encoding                    encoding = null,
-            int                         tryTimes = 0)
+            Dictionary<string, string>  parameters  = null,
+            string                      rawData     = null,
+            CookieContainer             cookies     = null,
+            Dictionary<string, string>  headers     = null,
+            Encoding                    encoding    = null,
+            int                         tryTimes    = 0)
         {
             try
             {
@@ -392,13 +393,13 @@ namespace Bytloos.Web
         /// <returns>Response string.</returns>
         public string Multipart(
             string                      url,
-            Dictionary<string, string>  parameters = null,
-            string                      rawData = null,
-            Dictionary<string, string>  files = null,
-            CookieContainer             cookies = null,
-            Dictionary<string, string>  headers = null,
-            Encoding                    encoding = null,
-            int                         tryTimes = 0)
+            Dictionary<string, string>  parameters  = null,
+            string                      rawData     = null,
+            Dictionary<string, string>  files       = null,
+            CookieContainer             cookies     = null,
+            Dictionary<string, string>  headers     = null,
+            Encoding                    encoding    = null,
+            int                         tryTimes    = 0)
         {
             try
             {
@@ -492,6 +493,42 @@ namespace Bytloos.Web
 
                 return null;
             }
+        }
+
+        public Task<string> GetAsync(
+            string                      url,
+            Dictionary<string, string>  parameters  = null,
+            CookieContainer             cookies     = null,
+            Dictionary<string, string>  headers     = null,
+            Encoding                    encoding    = null,
+            int                         tryTimes    = 0)
+        {
+            return Task.Factory.StartNew(() => Get(url, parameters, cookies, headers, encoding, tryTimes));
+        }
+
+        public Task<string> PostAsync(
+            string                      url,
+            Dictionary<string, string>  parameters  = null,
+            string                      rawData     = null,
+            CookieContainer             cookies     = null,
+            Dictionary<string, string>  headers     = null,
+            Encoding                    encoding    = null,
+            int                         tryTimes    = 0)
+        {
+            return Task.Factory.StartNew(() => Post(url, parameters, rawData, cookies, headers, encoding, tryTimes));
+        }
+
+        public Task<string> MultipartAsync(
+            string                      url,
+            Dictionary<string, string>  parameters  = null,
+            string                      rawData     = null,
+            Dictionary<string, string>  files       = null,
+            CookieContainer             cookies     = null,
+            Dictionary<string, string>  headers     = null,
+            Encoding                    encoding    = null,
+            int                         tryTimes    = 0)
+        {
+            return Task.Factory.StartNew(() => Multipart(url, parameters, rawData, files, cookies, headers, encoding, tryTimes));
         }
 
         private static string ParseQuery(string url)
