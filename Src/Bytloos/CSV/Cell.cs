@@ -40,8 +40,8 @@ namespace Bytloos.CSV
 
             Data = dataParsing ? Parse(data) : data;
 
-            this.commonX = this.X = xPosition;
-            this.commonY = this.Y = yPosition;
+            this.commonX = X = xPosition;
+            this.commonY = Y = yPosition;
         }
 
         /// <summary>
