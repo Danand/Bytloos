@@ -20,9 +20,10 @@ namespace Bytloos.Web
     {
         public delegate void OnStreamReading(long currentBytes, long totalBytes);
 
-        private const int DEFAULT_BUFFER_SIZE = 2048;
-        private const string DEFAULT_URL = "http://localhost";
-        private const string DEFAULT_POST_CONTENT_TYPE = "application/x-www-form-urlencoded";
+        private const int       DEFAULT_BUFFER_SIZE             = 2048;
+        private const int       MULTIPART_BOUNDARY_LINE_LENGTH  = 28;
+        private const string    DEFAULT_URL                     = "http://localhost";
+        private const string    DEFAULT_POST_CONTENT_TYPE       = "application/x-www-form-urlencoded";
 
         private const string DEFAULT_USER_AGENT
             = "Mozilla/5.0 (Windows NT 6.1; WOW64) "
@@ -156,6 +157,7 @@ namespace Bytloos.Web
         /// <param name="parameters">Query.</param>
         /// <param name="cookies">Cookies.</param>
         /// <param name="headers">HTTP request headers.</param>
+        /// <param name="options">HTTP request options (auto redirect, timeout, etc.).</param>
         /// <param name="encoding">Encoding.</param>
         /// <param name="tryTimes">Number of attempts when getting response has failed.</param>
         /// <returns>Response string.</returns>
@@ -163,7 +165,8 @@ namespace Bytloos.Web
             string                      url,
             Dictionary<string, string>  parameters  = null,
             CookieContainer             cookies     = null,
-            Dictionary<string, string>  headers     = null,
+            List<HTTPHeader>            headers     = null,
+            HTTPOptions                 options     = null,
             Encoding                    encoding    = null,
             int                         tryTimes    = 0)
         {
@@ -193,7 +196,8 @@ namespace Bytloos.Web
                                 ? "&"
                                 : string.Empty,
                             possibleQuery),
-                        headers);
+                        headers,
+                        options);
 
                 request.Method = "GET";
                 request.CookieContainer = cookies ?? Cookies;
@@ -258,7 +262,7 @@ namespace Bytloos.Web
                     SwitchProxy();
 
                 if (tryTimes > 0)
-                    return Get(url, parameters, cookies, headers, encoding, --tryTimes);
+                    return Get(url, parameters, cookies, headers, options, encoding, --tryTimes);
 
                 if (!this.isSilent)
                     throw;
@@ -275,6 +279,7 @@ namespace Bytloos.Web
         /// <param name="rawData">Raw data before building query string.</param>
         /// <param name="cookies">Cookies.</param>
         /// <param name="headers">HTTP request headers.</param>
+        /// <param name="options">HTTP request options (auto redirect, timeout, etc.).</param>
         /// <param name="encoding">Encoding.</param>
         /// <param name="tryTimes">Number of attempts when getting response has failed.</param>
         /// <returns>Response string.</returns>
@@ -283,7 +288,8 @@ namespace Bytloos.Web
             Dictionary<string, string>  parameters  = null,
             string                      rawData     = null,
             CookieContainer             cookies     = null,
-            Dictionary<string, string>  headers     = null,
+            List<HTTPHeader>            headers     = null,
+            HTTPOptions                 options     = null,
             Encoding                    encoding    = null,
             int                         tryTimes    = 0)
         {
@@ -297,7 +303,7 @@ namespace Bytloos.Web
 
                 var postData = parameters != null ? BuildQuery(parameters) : rawData;
 
-                var request = BuildRequest(url, headers);
+                var request = BuildRequest(url, headers, options);
 
                 request.Method = "POST";
                 request.ContentType = request.ContentType ?? DEFAULT_POST_CONTENT_TYPE;
@@ -370,7 +376,7 @@ namespace Bytloos.Web
                     SwitchProxy();
 
                 if (tryTimes > 0)
-                    return Post(url, parameters, rawData, cookies, headers, encoding, --tryTimes);
+                    return Post(url, parameters, rawData, cookies, headers, options, encoding, --tryTimes);
 
                 if (!this.isSilent)
                     throw;
@@ -388,6 +394,7 @@ namespace Bytloos.Web
         /// <param name="files">Dictionary of files where key is name and value is path.</param>
         /// <param name="cookies">Cookies.</param>
         /// <param name="headers">HTTP request headers.</param>
+        /// <param name="options">HTTP request options (auto redirect, timeout, etc.).</param>
         /// <param name="encoding">Encoding.</param>
         /// <param name="tryTimes">Number of attempts when getting response has failed.</param>
         /// <returns>Response string.</returns>
@@ -397,7 +404,8 @@ namespace Bytloos.Web
             string                      rawData     = null,
             Dictionary<string, string>  files       = null,
             CookieContainer             cookies     = null,
-            Dictionary<string, string>  headers     = null,
+            List<HTTPHeader>            headers     = null,
+            HTTPOptions                 options     = null,
             Encoding                    encoding    = null,
             int                         tryTimes    = 0)
         {
@@ -409,11 +417,11 @@ namespace Bytloos.Web
                 if (Delay > 0)
                     Thread.Sleep(Delay);
 
-                var boundary = new string('-', 28) + DateTime.Now.Ticks.ToString("x");
+                var boundary = new string('-', MULTIPART_BOUNDARY_LINE_LENGTH) + DateTime.Now.Ticks.ToString("x");
 
                 var postData = parameters != null ? BuildMultipartQuery(parameters, boundary, files) : rawData;
 
-                var request = BuildRequest(url, headers);
+                var request = BuildRequest(url, headers, options);
 
                 request.Method = "POST";
                 request.CookieContainer = cookies ?? Cookies;
@@ -486,7 +494,7 @@ namespace Bytloos.Web
                     SwitchProxy();
 
                 if (tryTimes > 0)
-                    return Multipart(url, parameters, rawData, files, cookies, headers, encoding, --tryTimes);
+                    return Multipart(url, parameters, rawData, files, cookies, headers, options, encoding, --tryTimes);
 
                 if (!this.isSilent)
                     throw;
@@ -495,47 +503,87 @@ namespace Bytloos.Web
             }
         }
 
+        /// <summary>
+        /// Async GET request.
+        /// </summary>
+        /// <param name="url">URL.</param>
+        /// <param name="parameters">Query.</param>
+        /// <param name="cookies">Cookies.</param>
+        /// <param name="headers">HTTP request headers.</param>
+        /// <param name="options">HTTP request options (auto redirect, timeout, etc.).</param>
+        /// <param name="encoding">Encoding.</param>
+        /// <param name="tryTimes">Number of attempts when getting response has failed.</param>
+        /// <returns>Response task.</returns>
         public Task<string> GetAsync(
             string                      url,
             Dictionary<string, string>  parameters  = null,
             CookieContainer             cookies     = null,
-            Dictionary<string, string>  headers     = null,
+            List<HTTPHeader>            headers     = null,
+            HTTPOptions                 options     = null,
             Encoding                    encoding    = null,
             int                         tryTimes    = 0)
         {
-            return Task.Factory.StartNew(() => Get(url, parameters, cookies, headers, encoding, tryTimes));
+            return Task.Factory.StartNew(() => Get(url, parameters, cookies, headers, options, encoding, tryTimes));
         }
 
+        /// <summary>
+        /// Async POST request.
+        /// </summary>
+        /// <param name="url">URL.</param>
+        /// <param name="parameters">Query.</param>
+        /// <param name="rawData">Raw data before building query string.</param>
+        /// <param name="cookies">Cookies.</param>
+        /// <param name="headers">HTTP request headers.</param>
+        /// <param name="options">HTTP request options (auto redirect, timeout, etc.).</param>
+        /// <param name="encoding">Encoding.</param>
+        /// <param name="tryTimes">Number of attempts when getting response has failed.</param>
+        /// <returns>Response task.</returns>
         public Task<string> PostAsync(
             string                      url,
             Dictionary<string, string>  parameters  = null,
             string                      rawData     = null,
             CookieContainer             cookies     = null,
-            Dictionary<string, string>  headers     = null,
+            List<HTTPHeader>            headers     = null,
+            HTTPOptions                 options     = null,
             Encoding                    encoding    = null,
             int                         tryTimes    = 0)
         {
-            return Task.Factory.StartNew(() => Post(url, parameters, rawData, cookies, headers, encoding, tryTimes));
+            return Task.Factory.StartNew(() => Post(url, parameters, rawData, cookies, headers, options, encoding, tryTimes));
         }
 
+        /// <summary>
+        /// Async multipart POST request.
+        /// </summary>
+        /// <param name="url">URL.</param>
+        /// <param name="parameters">Query.</param>
+        /// <param name="rawData">Raw data before building query string.</param>
+        /// <param name="files">Dictionary of files where key is name and value is path.</param>
+        /// <param name="cookies">Cookies.</param>
+        /// <param name="headers">HTTP request headers.</param>
+        /// <param name="options">HTTP request options (auto redirect, timeout, etc.).</param>
+        /// <param name="encoding">Encoding.</param>
+        /// <param name="tryTimes">Number of attempts when getting response has failed.</param>
+        /// <returns>Response task.</returns>
         public Task<string> MultipartAsync(
             string                      url,
             Dictionary<string, string>  parameters  = null,
             string                      rawData     = null,
             Dictionary<string, string>  files       = null,
             CookieContainer             cookies     = null,
-            Dictionary<string, string>  headers     = null,
+            List<HTTPHeader>            headers     = null,
+            HTTPOptions                 options     = null,
             Encoding                    encoding    = null,
             int                         tryTimes    = 0)
         {
-            return Task.Factory.StartNew(() => Multipart(url, parameters, rawData, files, cookies, headers, encoding, tryTimes));
+            return Task.Factory.StartNew(() => Multipart(url, parameters, rawData, files, cookies, headers, options, encoding, tryTimes));
         }
 
         private static string ParseQuery(string url)
         {
             var urlSlices = url.Split('?');
 
-            if (urlSlices.Length != 2) return string.Empty;
+            if (urlSlices.Length != 2)
+                return string.Empty;
 
             var queryString = urlSlices[1];
 
@@ -805,7 +853,7 @@ namespace Bytloos.Web
             return result ?? "application/octet-stream";
         }
 
-        private HttpWebRequest BuildRequest(string url, Dictionary<string, string> headers = null)
+        private HttpWebRequest BuildRequest(string url, IEnumerable<HTTPHeader> headers, HTTPOptions options)
         {
             var request = (HttpWebRequest)WebRequest.Create(url);
 
@@ -815,21 +863,23 @@ namespace Bytloos.Web
             {
                 foreach (var header in headers)
                 {
-                    switch (header.Key)
+                    switch (header.PresetKey)
                     {
-                        case "user-agent":          request.UserAgent = header.Value;
+                        default:                            request.Headers.Add(header.CustomKey, header.Value);
                             break;
-                        case "accept":              request.Accept = header.Value;
+                        case HTTPHeaderKey.UserAgent:       request.UserAgent = header.Value;
                             break;
-                        case "host":                request.Host = header.Value;
+                        case HTTPHeaderKey.Accept:          request.Accept = header.Value;
                             break;
-                        case "referer":             request.Referer = header.Value;
+                        case HTTPHeaderKey.Host:            request.Host = header.Value;
                             break;
-                        case "content-type":        request.ContentType = header.Value;
+                        case HTTPHeaderKey.Referer:         request.Referer = header.Value;
                             break;
-                        case "content-length":      request.ContentLength = long.Parse(header.Value);
+                        case HTTPHeaderKey.ContentType:     request.ContentType = header.Value;
                             break;
-                        case "connection":
+                        case HTTPHeaderKey.ContentLength:   request.ContentLength = long.Parse(header.Value);
+                            break;
+                        case HTTPHeaderKey.Connection:
 
                             if (header.Value != "keep-alive" && header.Value != "close")
                                 request.Connection = header.Value;
@@ -837,30 +887,25 @@ namespace Bytloos.Web
                                 request.KeepAlive = header.Value == "keep-alive";
 
                             break;
-                        #region Pseudoheaders (custom directives)
-                        case "allowautoredirect":   request.AllowAutoRedirect = bool.Parse(header.Value);
-                            break;
-                        case "expect":              request.ServicePoint.Expect100Continue = header.Value == "100-Continue";
-                            break;
-                        case "timeout":             request.Timeout = int.Parse(header.Value);
-                            break;
-                        case "proxy":               request.Proxy = new WebProxy(header.Value);
-                            break;
-                        #endregion
-                        default:                    request.Headers.Add(header.Key, header.Value);
-                            break;
                     }
                 }
             }
 
-            request.Accept = request.Accept ?? this.defaultRequest.Accept;
+            if (options != null)
+            {
+                request.AllowAutoRedirect = options.AllowAutoRedirect;
+                request.ServicePoint.Expect100Continue = options.Expect100Continue;
+                request.Timeout = options.Timeout;
+                request.Proxy = options.Proxy;
+            }
 
+            request.Accept = request.Accept ?? this.defaultRequest.Accept;
             request.UserAgent = request.UserAgent ?? this.defaultRequest.UserAgent;
 
             if (string.IsNullOrEmpty(request.Headers[HttpRequestHeader.AcceptLanguage]))
                 request.Headers.Add(
-                    HttpRequestHeader.AcceptLanguage,
-                    this.defaultRequest.Headers[HttpRequestHeader.AcceptLanguage]);
+                    header: HttpRequestHeader.AcceptLanguage,
+                    value:  this.defaultRequest.Headers[HttpRequestHeader.AcceptLanguage]);
 
             request.Referer = request.Referer ?? Referer;
 

@@ -30,7 +30,7 @@ namespace Bytloos
         /// <typeparam name="T">Object type.</typeparam>
         /// <param name="pathToBinaryData">Path to file that contains object.</param>
         /// <returns>Object of type passed as type argument.</returns>
-        public static T GetObjectOfType<T>(string pathToBinaryData)
+        public static T LoadObject<T>(string pathToBinaryData)
         {
             if (!File.Exists(pathToBinaryData))
                 throw new FileNotFoundException();
