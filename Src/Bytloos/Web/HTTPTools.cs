@@ -26,11 +26,11 @@ namespace Bytloos.Web
         private const string    DEFAULT_POST_CONTENT_TYPE       = "application/x-www-form-urlencoded";
 
         private const string DEFAULT_USER_AGENT
-            = "Mozilla/5.0 (Windows NT 6.1; WOW64) "
+            = "Mozilla/5.0 (Windows NT 6.3) "
                 + "AppleWebKit/537.36 (KHTML, like Gecko) "
-                + "Chrome/39.0.2171.95 "
+                + "Chrome/46.0.2490.80 "
                 + "Safari/537.36 "
-                + "OPR/26.0.1656.60";
+                + "OPR/33.0.1990.58";
 
         private const string DEFAULT_ACCEPT
             = "text/html, "
@@ -42,8 +42,6 @@ namespace Bytloos.Web
                 + "image/gif, "
                 + "image/x-xbitmap, */*;q=0.1";
 
-        private readonly bool isSilent;
-        private readonly bool isProxyAutoswitching;
         private readonly Stopwatch stopWatch;
         private readonly HttpWebRequest defaultRequest;
         private readonly List<Exception> exceptions;
@@ -53,19 +51,9 @@ namespace Bytloos.Web
         /// <summary>
         /// Creates HTTP tools object.
         /// </summary>
-        /// <param name="silentMode">Suppress exceptions.</param>
-        /// <param name="proxies">Proxy list.</param>
-        /// <param name="autoSwitchProxies">Switch proxy when connection error occured.</param>
-        public HTTPTools(bool silentMode = true, List<WebProxy> proxies = null, bool autoSwitchProxies = false)
+        public HTTPTools()
         {
             SSLValidator.OverrideValidation();
-
-            this.isSilent = silentMode;
-            this.isProxyAutoswitching = autoSwitchProxies;
-            Proxies = proxies ?? new List<WebProxy>();
-
-            if (Proxies.Any())
-                this.currentProxy = Proxies[CurrentProxyIndex];
 
             this.stopWatch = new Stopwatch();
             this.exceptions = new List<Exception>();
@@ -88,6 +76,16 @@ namespace Bytloos.Web
 
             Cookies = new CookieContainer();
         }
+
+        /// <summary>
+        /// Suppress HTTP request exceptions.
+        /// </summary>
+        public bool SilentMode { get; set; }
+
+        /// <summary>
+        /// Switch proxies automatically.
+        /// </summary>
+        public bool ProxyAutoswitching { get; set; }
 
         /// <summary>
         /// Index of current proxy.
@@ -115,6 +113,16 @@ namespace Bytloos.Web
         public CookieContainer Cookies { get; set; }
 
         /// <summary>
+        /// HTTP request options.
+        /// </summary>
+        public HTTPOptions Options { get; set; }
+
+        /// <summary>
+        /// HTTP headers.
+        /// </summary>
+        public List<HTTPHeader> Headers { get; set; } 
+
+        /// <summary>
         /// Proxy list.
         /// </summary>
         public List<WebProxy> Proxies { get; set; }
@@ -140,11 +148,12 @@ namespace Bytloos.Web
         /// </summary>
         public void SwitchProxy()
         {
-            if (Proxies == null || Proxies.Count <= 1) return;
+            if (Proxies == null || Proxies.Count <= 1)
+                return;
 
             CurrentProxyIndex = Proxies.Count > CurrentProxyIndex ? CurrentProxyIndex + 1 : 0;
 
-            if (!this.isSilent && CurrentProxyIndex == 0)
+            if (!SilentMode && CurrentProxyIndex == 0)
                 throw new IndexOutOfRangeException();
 
             this.currentProxy = Proxies[CurrentProxyIndex];
@@ -258,13 +267,13 @@ namespace Bytloos.Web
             {
                 this.exceptions.Add(exception);
 
-                if(this.isProxyAutoswitching)
+                if(ProxyAutoswitching)
                     SwitchProxy();
 
                 if (tryTimes > 0)
                     return Get(url, parameters, cookies, headers, options, encoding, --tryTimes);
 
-                if (!this.isSilent)
+                if (!SilentMode)
                     throw;
 
                 return null;
@@ -372,13 +381,13 @@ namespace Bytloos.Web
             {
                 this.exceptions.Add(exception);
 
-                if (this.isProxyAutoswitching)
+                if (ProxyAutoswitching)
                     SwitchProxy();
 
                 if (tryTimes > 0)
                     return Post(url, parameters, rawData, cookies, headers, options, encoding, --tryTimes);
 
-                if (!this.isSilent)
+                if (!SilentMode)
                     throw;
 
                 return null;
@@ -490,13 +499,13 @@ namespace Bytloos.Web
             {
                 this.exceptions.Add(exception);
 
-                if (this.isProxyAutoswitching)
+                if (ProxyAutoswitching)
                     SwitchProxy();
 
                 if (tryTimes > 0)
                     return Multipart(url, parameters, rawData, files, cookies, headers, options, encoding, --tryTimes);
 
-                if (!this.isSilent)
+                if (!SilentMode)
                     throw;
 
                 return null;
@@ -858,6 +867,9 @@ namespace Bytloos.Web
             var request = (HttpWebRequest)WebRequest.Create(url);
 
             request.Proxy = this.currentProxy ?? request.Proxy;
+
+            headers = headers ?? Headers;
+            options = options ?? Options;
 
             if (headers != null)
             {
