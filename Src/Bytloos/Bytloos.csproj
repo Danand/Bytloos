@@ -57,6 +57,7 @@
     <Compile Include="CSV\Cell.cs" />
     <Compile Include="CSV\CSVDocument.cs" />
     <Compile Include="FilePath.cs" />
+    <Compile Include="INIFile.cs" />
     <Compile Include="Invoker.cs" />
     <Compile Include="Log.cs" />
     <Compile Include="Web\FTPTools.cs" />

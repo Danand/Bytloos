@@ -32,7 +32,7 @@ namespace Bytloos.Extensions
         /// <typeparam name="T">Type of object to get.</typeparam>
         /// <param name="source">Source object.</param>
         /// <param name="index">Index.</param>
-        /// <returns>Object at index in reversed enumeration.</returns>
+        /// <returns>Object at index in reversed enumerable collection.</returns>
         public static T ElementAtReverse<T>(this IEnumerable<T> source, int index)
         {
             var array = source as T[] ?? source.ToArray();
@@ -45,7 +45,7 @@ namespace Bytloos.Extensions
         /// <typeparam name="T">Type of object to get.</typeparam>
         /// <param name="source">Source object.</param>
         /// <param name="index">Index.</param>
-        /// <returns>Object at index in reversed enumeration or default value.</returns>
+        /// <returns>Object at index in reversed enumerable collection or default value.</returns>
         public static T ElementAtReverseOrDefault<T>(this IEnumerable<T> source, int index)
         {
             var array = source as T[] ?? source.ToArray();
@@ -53,12 +53,12 @@ namespace Bytloos.Extensions
         }
 
         /// <summary>
-        /// Batches enumeration into some parts.
+        /// Batches enumerable collection into some parts.
         /// </summary>
-        /// <typeparam name="T">Type of objects in enumeration.</typeparam>
+        /// <typeparam name="T">Type of objects in enumerable collection.</typeparam>
         /// <param name="source">Source object.</param>
         /// <param name="size">Size of each part.</param>
-        /// <returns>Enumerations splitted by size.</returns>
+        /// <returns>enumerable collections splitted by size.</returns>
         public static IEnumerable<IEnumerable<T>> Batch<T>(this IEnumerable<T> source, int size)
         {
             return source
@@ -68,13 +68,13 @@ namespace Bytloos.Extensions
         }
 
         /// <summary>
-        /// Finds element in enumeration of arrays by first value of array.
+        /// Finds element in enumerable collection of arrays by first value of array.
         /// </summary>
         /// <typeparam name="T">Type of object.</typeparam>
         /// <param name="source">Source object.</param>
         /// <param name="key">Key to search.</param>
         /// <param name="keyPosition">Index of key in array.</param>
-        /// <returns>Element in enumeration of arrays by first value of array</returns>
+        /// <returns>Element in enumerable collection of arrays by first value of array</returns>
         public static IEnumerable<T> FindElementByKey<T>(this IEnumerable<T[]> source, T key, int keyPosition = 0)
         {
             return source.FirstOrDefault(element => element[keyPosition < element.Count() ? keyPosition : element.Count() - 1].Equals(key));
@@ -83,7 +83,7 @@ namespace Bytloos.Extensions
         /// <summary>
         /// Wrapper of All().
         /// </summary>
-        /// <param name="source">Source enumeration of strings..</param>
+        /// <param name="source">Source enumerable collection of strings..</param>
         /// <param name="patterns">String pattern.</param>
         /// <returns>True if pattern matches some element.</returns>
         public static bool Contains(this IEnumerable<string> source, params string[] patterns)
@@ -118,7 +118,7 @@ namespace Bytloos.Extensions
         }
 
         /// <summary>
-        /// Converts enumeration to a stack.
+        /// Converts enumerable collection to a stack.
         /// </summary>
         /// <typeparam name="T">Type of object.</typeparam>
         /// <param name="source">Source stack.</param>
