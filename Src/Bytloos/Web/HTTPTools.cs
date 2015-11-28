@@ -10,6 +10,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
+using Bytloos.Extensions;
 
 namespace Bytloos.Web
 {
@@ -213,7 +214,7 @@ namespace Bytloos.Web
 
                 Cookies = cookies ?? Cookies;
 
-                var response = (HttpWebResponse)request.GetResponse();
+                var response = request.GetResponse(quietly: SilentMode);
 
                 if (encoding == null && !string.IsNullOrEmpty(response.ContentType))
                     encoding
@@ -327,7 +328,7 @@ namespace Bytloos.Web
                 using (var requestStream = request.GetRequestStream())
                     requestStream.Write(bytes, 0, bytes.Length);
 
-                var response = (HttpWebResponse)request.GetResponse();
+                var response = request.GetResponse(quietly: SilentMode);
 
                 if (encoding == null && !string.IsNullOrEmpty(response.ContentType))
                     encoding
@@ -445,7 +446,7 @@ namespace Bytloos.Web
                 using (var requestStream = request.GetRequestStream())
                     requestStream.Write(bytes, 0, bytes.Length);
 
-                var response = (HttpWebResponse)request.GetResponse();
+                var response = request.GetResponse(quietly: SilentMode);
 
                 if (encoding == null && !string.IsNullOrEmpty(response.ContentType))
                     encoding
