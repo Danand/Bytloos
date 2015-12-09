@@ -182,11 +182,7 @@ namespace Bytloos.Web
         {
             try
             {
-                this.stopWatch.Reset();
-                this.stopWatch.Start();
-
-                if (Delay > 0)
-                    Thread.Sleep(Delay);
+                BeginWatching();
 
                 var queryString = ParseQuery(url);
                 var possibleQuery = BuildQuery(parameters);
@@ -214,55 +210,7 @@ namespace Bytloos.Web
 
                 Cookies = cookies ?? Cookies;
 
-                var response = request.GetResponse(quietly: SilentMode);
-
-                if (encoding == null && !string.IsNullOrEmpty(response.ContentType))
-                    encoding
-                        = response.ContentType.Contains("=")
-                            ? Encoding.GetEncoding(response.ContentType.Split('=')[1])
-                            : Encoding.Default;
-
-                var responseStream = response.GetResponseStream();
-
-                responseStream
-                    = response.ContentEncoding == "gzip" && responseStream != null
-                        ? new GZipStream(responseStream, CompressionMode.Decompress)
-                        : responseStream;
-
-                if (responseStream == null)
-                    return null;
-
-                var memoryStream = new MemoryStream();
-
-                int bytesSize;
-                var bytesBuffer = new byte[DEFAULT_BUFFER_SIZE];
-
-                while ((bytesSize = responseStream.Read(bytesBuffer, 0, bytesBuffer.Length)) > 0)
-                {
-                    if(memoryStream.Length == 0 && StreamReading != null)
-                        StreamReading(memoryStream.Length, response.ContentLength);
-                    
-                    memoryStream.Write(bytesBuffer, 0, bytesSize);
-
-                    if (StreamReading != null)
-                        StreamReading(memoryStream.Length, response.ContentLength);
-                }
-
-                memoryStream.Position = 0;
-
-                var streamReader = new StreamReader(memoryStream, encoding ?? Encoding.Default);
-
-                var content = streamReader.ReadToEnd();
-
-                streamReader.Close();
-                memoryStream.Close();
-                response.Close();
-
-                this.stopWatch.Stop();
-
-                Referer = url;
-
-                return content;
+                return GetResponseString(request, encoding);
             }
             catch (Exception exception)
             {
@@ -305,11 +253,7 @@ namespace Bytloos.Web
         {
             try
             {
-                this.stopWatch.Reset();
-                this.stopWatch.Start();
-
-                if (Delay > 0)
-                    Thread.Sleep(Delay);
+                BeginWatching();
 
                 var postData = parameters != null ? BuildQuery(parameters) : rawData;
 
@@ -328,55 +272,7 @@ namespace Bytloos.Web
                 using (var requestStream = request.GetRequestStream())
                     requestStream.Write(bytes, 0, bytes.Length);
 
-                var response = request.GetResponse(quietly: SilentMode);
-
-                if (encoding == null && !string.IsNullOrEmpty(response.ContentType))
-                    encoding
-                        = response.ContentType.Contains("=")
-                            ? Encoding.GetEncoding(response.ContentType.Split('=')[1])
-                            : Encoding.Default;
-
-                var responseStream = response.GetResponseStream();
-
-                responseStream
-                    = response.ContentEncoding == "gzip" && responseStream != null
-                        ? new GZipStream(responseStream, CompressionMode.Decompress)
-                        : responseStream;
-
-                if (responseStream == null)
-                    return null;
-
-                var memoryStream = new MemoryStream();
-
-                int bytesSize;
-                var bytesBuffer = new byte[DEFAULT_BUFFER_SIZE];
-
-                while ((bytesSize = responseStream.Read(bytesBuffer, 0, bytesBuffer.Length)) > 0)
-                {
-                    if (memoryStream.Length == 0 && StreamReading != null)
-                        StreamReading(memoryStream.Length, response.ContentLength);
-
-                    memoryStream.Write(bytesBuffer, 0, bytesSize);
-
-                    if (StreamReading != null)
-                        StreamReading(memoryStream.Length, response.ContentLength);
-                }
-
-                memoryStream.Position = 0;
-
-                var streamReader = new StreamReader(memoryStream, encoding ?? Encoding.Default);
-
-                var content = streamReader.ReadToEnd();
-
-                streamReader.Close();
-                memoryStream.Close();
-                response.Close();
-
-                this.stopWatch.Stop();
-
-                Referer = url;
-
-                return content;
+                return GetResponseString(request, encoding);
             }
             catch (Exception exception)
             {
@@ -421,11 +317,7 @@ namespace Bytloos.Web
         {
             try
             {
-                this.stopWatch.Reset();
-                this.stopWatch.Start();
-
-                if (Delay > 0)
-                    Thread.Sleep(Delay);
+                BeginWatching();
 
                 var boundary = new string('-', MULTIPART_BOUNDARY_LINE_LENGTH) + DateTime.Now.Ticks.ToString("x");
 
@@ -446,55 +338,7 @@ namespace Bytloos.Web
                 using (var requestStream = request.GetRequestStream())
                     requestStream.Write(bytes, 0, bytes.Length);
 
-                var response = request.GetResponse(quietly: SilentMode);
-
-                if (encoding == null && !string.IsNullOrEmpty(response.ContentType))
-                    encoding
-                        = response.ContentType.Contains("=")
-                            ? Encoding.GetEncoding(response.ContentType.Split('=')[1])
-                            : Encoding.Default;
-
-                var responseStream = response.GetResponseStream();
-
-                responseStream
-                    = response.ContentEncoding == "gzip" && responseStream != null
-                        ? new GZipStream(responseStream, CompressionMode.Decompress)
-                        : responseStream;
-
-                if (responseStream == null)
-                    return null;
-
-                var memoryStream = new MemoryStream();
-
-                int bytesSize;
-                var bytesBuffer = new byte[DEFAULT_BUFFER_SIZE];
-
-                while ((bytesSize = responseStream.Read(bytesBuffer, 0, bytesBuffer.Length)) > 0)
-                {
-                    if (memoryStream.Length == 0 && StreamReading != null)
-                        StreamReading(memoryStream.Length, response.ContentLength);
-
-                    memoryStream.Write(bytesBuffer, 0, bytesSize);
-
-                    if (StreamReading != null)
-                        StreamReading(memoryStream.Length, response.ContentLength);
-                }
-
-                memoryStream.Position = 0;
-
-                var streamReader = new StreamReader(memoryStream, encoding ?? Encoding.Default);
-
-                var content = streamReader.ReadToEnd();
-
-                streamReader.Close();
-                memoryStream.Close();
-                response.Close();
-
-                this.stopWatch.Stop();
-
-                Referer = url;
-
-                return content;
+                return GetResponseString(request, encoding);
             }
             catch (Exception exception)
             {
@@ -863,6 +707,15 @@ namespace Bytloos.Web
             return result ?? "application/octet-stream";
         }
 
+        private void BeginWatching()
+        {
+            this.stopWatch.Reset();
+            this.stopWatch.Start();
+
+            if (Delay > 0)
+                Thread.Sleep(Delay);
+        }
+
         private HttpWebRequest BuildRequest(string url, IEnumerable<HTTPHeader> headers, HTTPOptions options)
         {
             var request = (HttpWebRequest)WebRequest.Create(url);
@@ -923,6 +776,59 @@ namespace Bytloos.Web
             request.Referer = request.Referer ?? Referer;
 
             return request;
+        }
+
+        private string GetResponseString(HttpWebRequest request, Encoding encoding)
+        {
+            var response = request.GetResponse(quietly: SilentMode);
+
+            if (encoding == null && !string.IsNullOrEmpty(response.ContentType))
+                encoding
+                    = response.ContentType.Contains("=")
+                        ? Encoding.GetEncoding(response.ContentType.Split('=')[1])
+                        : Encoding.Default;
+
+            var responseStream = response.GetResponseStream();
+
+            responseStream
+                = response.ContentEncoding == "gzip" && responseStream != null
+                    ? new GZipStream(responseStream, CompressionMode.Decompress)
+                    : responseStream;
+
+            if (responseStream == null)
+                return null;
+
+            var memoryStream = new MemoryStream();
+
+            int bytesSize;
+            var bytesBuffer = new byte[DEFAULT_BUFFER_SIZE];
+
+            while ((bytesSize = responseStream.Read(bytesBuffer, 0, bytesBuffer.Length)) > 0)
+            {
+                if (memoryStream.Length == 0 && StreamReading != null)
+                    StreamReading(memoryStream.Length, response.ContentLength);
+
+                memoryStream.Write(bytesBuffer, 0, bytesSize);
+
+                if (StreamReading != null)
+                    StreamReading(memoryStream.Length, response.ContentLength);
+            }
+
+            memoryStream.Position = 0;
+
+            var streamReader = new StreamReader(memoryStream, encoding ?? Encoding.Default);
+
+            var content = streamReader.ReadToEnd();
+
+            streamReader.Close();
+            memoryStream.Close();
+            response.Close();
+
+            this.stopWatch.Stop();
+
+            Referer = request.RequestUri.AbsoluteUri;
+
+            return content;
         }
     }
 }
