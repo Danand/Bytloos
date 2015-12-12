@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.IO;
 using System.Text;
 using System.Collections.Generic;
@@ -65,6 +66,67 @@ namespace Bytloos.CSV
         public List<List<Cell>> Columns
         {
             get { return cachedColumns ?? (cachedColumns = GetLines(vertical: true)); }
+        }
+
+        /// <summary>
+        /// Serializes object fields as CSV table.
+        /// </summary>
+        /// <param name="target">Target object.</param>
+        /// <param name="document">CSV document for writing fields in.</param>
+        public static void Serialize(object target, CSVDocument document)
+        {
+            foreach (var fieldInfo in target.GetType().GetFields())
+                if (fieldInfo.FieldType.GetInterfaces().Contains(typeof(ISerializable)))
+                    document.AppendRow(
+                        fieldInfo.Name,
+                        ((ISerializable)fieldInfo.GetValue(target)).GetStringValue());
+
+            foreach (var propertyInfo in target.GetType().GetProperties())
+                if (propertyInfo.PropertyType.GetInterfaces().Contains(typeof(ISerializable)))
+                    document.AppendRow(
+                        propertyInfo.Name,
+                        ((ISerializable)propertyInfo.GetValue(obj: target, index: null)).GetStringValue());
+
+            document.Save();
+        }
+
+        /// <summary>
+        /// Deserializes object fields from CSV table.
+        /// </summary>
+        /// <typeparam name="T">Object type.</typeparam>
+        /// <param name="document">CSV document with stored object.</param>
+        /// <returns>Deserialized object.</returns>
+        public static T Deserialize<T>(CSVDocument document)
+            where T : new()
+        {
+            var result = new T();
+
+            foreach (var row in document.Rows)
+                foreach (var fieldInfo in typeof(T).GetFields())
+                    if (fieldInfo.Name == row.First().Data &&
+                        fieldInfo.FieldType.GetInterfaces().Contains(typeof(ISerializable)))
+                    {
+                        fieldInfo.SetValue(
+                            obj:    result,
+                            value:  Activator.CreateInstance(fieldInfo.FieldType));
+
+                        ((ISerializable)fieldInfo.GetValue(result)).SetValueFromString(row.Last().Data);
+                    }
+
+            foreach (var row in document.Rows)
+                foreach (var propertyInfo in typeof(T).GetProperties())
+                    if (propertyInfo.Name == row.First().Data &&
+                        propertyInfo.PropertyType.GetInterfaces().Contains(typeof(ISerializable)))
+                    {
+                        propertyInfo.SetValue(
+                            obj:    result,
+                            value:  Activator.CreateInstance(propertyInfo.PropertyType),
+                            index:  null);
+
+                        ((ISerializable)propertyInfo.GetValue(obj: result, index: null)).SetValueFromString(row.Last().Data);
+                    }
+
+            return result;
         }
 
         /// <summary>
@@ -151,7 +213,7 @@ namespace Bytloos.CSV
                 sw.WriteLine(
                     string.Join(
                         Environment.NewLine,
-                        Rows.Select(row => string.Join(this.delimiter.ToString(), row))));
+                        Rows.Select(row => string.Join(this.delimiter.ToString(CultureInfo.InvariantCulture), row))));
         }
 
         /// <summary>

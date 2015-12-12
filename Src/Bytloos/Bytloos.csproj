@@ -52,6 +52,7 @@
   <ItemGroup>
     <Compile Include="CallTimer.cs" />
     <Compile Include="CSV\CellExtensions.cs" />
+    <Compile Include="CSV\ISerializable.cs" />
     <Compile Include="Dispatcher.cs" />
     <Compile Include="Extensions\CryptExtensions.cs" />
     <Compile Include="CSV\Cell.cs" />
