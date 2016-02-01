@@ -27,7 +27,7 @@ namespace Bytloos.Extensions
         {
             try
             {
-                return (HttpWebResponse)source.GetResponse();
+                return (HttpWebResponse) source.GetResponse();
             }
             catch (WebException exception)
             {

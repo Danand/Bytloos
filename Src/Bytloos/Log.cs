@@ -40,7 +40,14 @@ namespace Bytloos
         /// </summary>
         public ReadOnlyCollection<string> Messages
         {
-            get { return this.lines.Select(tuple => tuple.Item2).OfType<string>().ToList().AsReadOnly(); }
+            get
+            {
+                return this.lines
+                    .Select(tuple => tuple.Item2)
+                    .OfType<string>()
+                    .ToList()
+                    .AsReadOnly();
+            }
         }
 
         /// <summary>
@@ -48,13 +55,23 @@ namespace Bytloos
         /// </summary>
         public ReadOnlyCollection<Exception> Exceptions
         {
-            get { return this.lines.Select(tuple => tuple.Item2).OfType<Exception>().ToList().AsReadOnly(); }
+            get
+            {
+                return this.lines
+                    .Select(tuple => tuple.Item2)
+                    .OfType<Exception>()
+                    .ToList()
+                    .AsReadOnly();
+            }
         }
 
         /// <summary>
         /// Saves changes to file.
         /// </summary>
-        public void Dispose() { Save(); }
+        public void Dispose()
+        {
+            Save();
+        }
 
         /// <summary>
         /// Appends new message.

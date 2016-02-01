@@ -69,9 +69,9 @@ namespace Bytloos.Web
             this.defaultRequest.Headers.Add(
                 HttpRequestHeader.AcceptLanguage,
                 string.Format(
-                    format: "{0},{1};q=0.9,en;q=0.8",
-                    arg0:   CultureInfo.CurrentCulture.Name,
-                    arg1:   CultureInfo.CurrentCulture.TwoLetterISOLanguageName));
+                    "{0},{1};q=0.9,en;q=0.8",
+                    CultureInfo.CurrentCulture.Name,
+                    CultureInfo.CurrentCulture.TwoLetterISOLanguageName));
             
             #endregion
 
@@ -142,7 +142,10 @@ namespace Bytloos.Web
         /// Makes memberwise clone of object.
         /// </summary>
         /// <returns>Memberwise clone of object</returns>
-        public object Clone() { return MemberwiseClone(); }
+        public object Clone()
+        {
+            return MemberwiseClone();
+        }
 
         /// <summary>
         /// Switch proxy to next.
@@ -216,7 +219,7 @@ namespace Bytloos.Web
             {
                 this.exceptions.Add(exception);
 
-                if(ProxyAutoswitching)
+                if (ProxyAutoswitching)
                     SwitchProxy();
 
                 if (tryTimes > 0)

@@ -10,6 +10,7 @@ namespace Bytloos.CSV
     public class Cell : ICloneable
     {
         internal const char QUOTE = '\"';
+        internal const char DEFAULT_DELIMITER = ';';
 
         private const string ESCAPED_QUOTE = "\"\"";
 
@@ -33,7 +34,7 @@ namespace Bytloos.CSV
             int         yPosition,
             string      data,
             bool        dataParsing = false,
-            char        delimiter   = ';')
+            char        delimiter   = DEFAULT_DELIMITER)
         {
             this.parentDoc = parentDoc;
             this.delimiter = delimiter;
@@ -47,27 +48,42 @@ namespace Bytloos.CSV
         /// <summary>
         /// Horizontal position.
         /// </summary>
-        public int X { get; private set; }
+        public int X
+        {
+            get; private set;
+        }
 
         /// <summary>
         /// Vertical position.
         /// </summary>
-        public int Y { get; private set; }
+        public int Y
+        {
+            get; private set;
+        }
 
         /// <summary>
         /// Text.
         /// </summary>
-        public string Data { get; set; }
+        public string Data
+        {
+            get; set;
+        }
 
         /// <summary>
         /// First cell of column.
         /// </summary>
-        public Cell ColumnKey { get { return this.parentDoc.Columns[this.commonX][0]; } }
+        public Cell ColumnKey
+        {
+            get { return this.parentDoc.Columns[this.commonX].First(); }
+        }
 
         /// <summary>
         /// First cell of row.
         /// </summary>
-        public Cell RowKey { get { return this.parentDoc.Rows[this.commonY][0]; } }
+        public Cell RowKey
+        {
+            get { return this.parentDoc.Rows[this.commonY].First(); }
+        }
 
         internal string EscapedData
         {
@@ -88,13 +104,19 @@ namespace Bytloos.CSV
         /// Gets memberwise clone.
         /// </summary>
         /// <returns>Memberwise clone.</returns>
-        public object Clone() { return this.MemberwiseClone(); }
+        public object Clone()
+        {
+            return this.MemberwiseClone();
+        }
 
         /// <summary>
         /// Gets escaped string representation of cell.
         /// </summary>
         /// <returns>Escaped string representation of cell.</returns>
-        public override string ToString() { return this.EscapedData; }
+        public override string ToString()
+        {
+            return this.EscapedData;
+        }
 
         internal void MovePosition(int xPosition, int yPosition)
         {

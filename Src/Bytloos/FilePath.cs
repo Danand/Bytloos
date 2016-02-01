@@ -20,7 +20,7 @@ namespace Bytloos
             if (Directory.Exists(path))
                 return true;
 
-            if(create)
+            if (create)
                 Directory.CreateDirectory(path);
             else
                 return false;

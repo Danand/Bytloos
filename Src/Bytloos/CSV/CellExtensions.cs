@@ -63,7 +63,7 @@ namespace Bytloos.CSV
             var dict = new Dictionary<string, Cell>();
 
             foreach (var cell in source)
-                if(suppressConflicts && !dict.ContainsKey((isColumn ? cell.RowKey : cell.ColumnKey).Data))
+                if (suppressConflicts && !dict.ContainsKey((isColumn ? cell.RowKey : cell.ColumnKey).Data))
                     dict.Add((isColumn ? cell.RowKey : cell.ColumnKey).Data, cell);
 
             return dict;

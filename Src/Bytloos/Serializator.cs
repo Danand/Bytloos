@@ -50,6 +50,7 @@ namespace Bytloos
             using (var ms = new MemoryStream())
             {
                 var bf = new BinaryFormatter();
+
                 bf.Serialize(ms, source);
 
                 ms.Position = 0;
