@@ -69,7 +69,7 @@ namespace Bytloos.Web
 
                 this.stream = this.response.GetResponseStream();
 
-                if(this.stream == null)
+                if (this.stream == null)
                     throw new NullReferenceException("Response stream is null.");
 
                 var localFileStream = new FileStream(localFilePath, FileMode.Create);
@@ -84,7 +84,10 @@ namespace Bytloos.Web
                         bytesRead = this.stream.Read(byteBuffer, 0, BUFFER_SIZE);
                     }
                 }
-                catch (Exception xcptn) { this.exceptions.Add(xcptn); }
+                catch (Exception xcptn)
+                {
+                    this.exceptions.Add(xcptn);
+                }
 
                 localFileStream.Close();
 
@@ -92,7 +95,10 @@ namespace Bytloos.Web
                 this.response.Close();
                 this.request = null;
             }
-            catch (Exception exception) { this.exceptions.Add(exception); }
+            catch (Exception exception)
+            {
+                this.exceptions.Add(exception);
+            }
         }
 
         /// <summary>
@@ -126,14 +132,20 @@ namespace Bytloos.Web
                         bytesSent = localFileStream.Read(byteBuffer, 0, BUFFER_SIZE);
                     }
                 }
-                catch (Exception xcptn) { this.exceptions.Add(xcptn); }
+                catch (Exception xcptn)
+                {
+                    this.exceptions.Add(xcptn);
+                }
 
                 localFileStream.Close();
 
                 this.stream.Close();
                 this.request = null;
             }
-            catch (Exception exception) { this.exceptions.Add(exception); }
+            catch (Exception exception)
+            {
+                this.exceptions.Add(exception);
+            }
         }
 
         /// <summary>
@@ -157,7 +169,10 @@ namespace Bytloos.Web
                 this.response.Close();
                 this.request = null;
             }
-            catch (Exception exception) { this.exceptions.Add(exception); }
+            catch (Exception exception)
+            {
+                this.exceptions.Add(exception);
+            }
         }
 
         /// <summary>
@@ -184,7 +199,10 @@ namespace Bytloos.Web
 
                 this.request = null;
             }
-            catch (Exception exception) { this.exceptions.Add(exception); }
+            catch (Exception exception)
+            {
+                this.exceptions.Add(exception);
+            }
         }
 
         /// <summary>
@@ -209,7 +227,10 @@ namespace Bytloos.Web
 
                 this.request = null;
             }
-            catch (Exception exception) { this.exceptions.Add(exception); }
+            catch (Exception exception)
+            {
+                this.exceptions.Add(exception);
+            }
         }
 
         /// <summary>
@@ -233,15 +254,21 @@ namespace Bytloos.Web
 
                 this.stream = this.response.GetResponseStream();
 
-                if(this.stream == null)
+                if (this.stream == null)
                     throw new NullReferenceException("Response stream is null.");
 
                 var ftpReader = new StreamReader(this.stream);
 
                 string fileInfo = null;
 
-                try { fileInfo = ftpReader.ReadToEnd(); }
-                catch (Exception xcptn) { this.exceptions.Add(xcptn); }
+                try
+                {
+                    fileInfo = ftpReader.ReadToEnd();
+                }
+                catch (Exception xcptn)
+                {
+                    this.exceptions.Add(xcptn);
+                }
 
                 ftpReader.Close();
 
@@ -251,7 +278,10 @@ namespace Bytloos.Web
 
                 return fileInfo;
             }
-            catch (Exception exception) { this.exceptions.Add(exception); }
+            catch (Exception exception)
+            {
+                this.exceptions.Add(exception);
+            }
 
             return null;
         }
@@ -283,8 +313,15 @@ namespace Bytloos.Web
                 var ftpReader = new StreamReader(this.stream);
                 string fileInfo = null;
 
-                try { while (ftpReader.Peek() != -1) { fileInfo = ftpReader.ReadToEnd(); } }
-                catch (Exception xcptn) { this.exceptions.Add(xcptn); }
+                try
+                {
+                    while (ftpReader.Peek() != -1)
+                        fileInfo = ftpReader.ReadToEnd();
+                }
+                catch (Exception xcptn)
+                {
+                    this.exceptions.Add(xcptn);
+                }
 
                 ftpReader.Close();
 
@@ -294,7 +331,10 @@ namespace Bytloos.Web
 
                 return fileInfo;
             }
-            catch (Exception exception) { this.exceptions.Add(exception); }
+            catch (Exception exception)
+            {
+                this.exceptions.Add(exception);
+            }
 
             return null;
         }
@@ -344,7 +384,7 @@ namespace Bytloos.Web
         {
             var directoryParts = directory.Split('/');
 
-            var upperLevels = string.Join("/", directoryParts.Take(directoryParts.Count() > 1 ? directoryParts.Count() - 1 : 1));
+            var upperLevels = string.Join("/", directoryParts.Take(directoryParts.Length > 1 ? directoryParts.Length - 1 : 1));
 
             var list = new List<string>();
 
@@ -370,9 +410,16 @@ namespace Bytloos.Web
 
                 var directoryRaw = string.Empty;
 
-                try { while (ftpReader.Peek() != -1) { directoryRaw += ftpReader.ReadLine() + "|"; } }
-                catch (Exception xcptn) { this.exceptions.Add(xcptn); }
-                
+                try
+                {
+                    while (ftpReader.Peek() != -1)
+                        directoryRaw += ftpReader.ReadLine() + "|";
+                }
+                catch (Exception xcptn)
+                {
+                    this.exceptions.Add(xcptn);
+                }
+
                 ftpReader.Close();
 
                 this.stream.Close();
@@ -381,7 +428,8 @@ namespace Bytloos.Web
 
                 try
                 {
-                    var contentLines = directoryRaw.Split("|".ToCharArray()).Select(e => upperLevels + "/" + e).ToArray();
+                    var contentLines =
+                        directoryRaw.Split("|".ToCharArray()).Select(e => upperLevels + "/" + e).ToArray();
 
                     contentLines = contentLines.Take(contentLines.Length > 1 ? contentLines.Length - 1 : 1).ToArray();
 
@@ -403,7 +451,8 @@ namespace Bytloos.Web
                             if (Regex.IsMatch(contentLine, @".+\.[^\,]+$"))
                                 continue;
 
-                            var innerContentLines = ListContents(contentLine, true, inclusivePattern, exclusivePattern, strongMatch);
+                            var innerContentLines = ListContents(contentLine, true, inclusivePattern, exclusivePattern,
+                                strongMatch);
 
                             if (innerContentLines != null)
                                 list.AddRange(innerContentLines);
@@ -415,9 +464,15 @@ namespace Bytloos.Web
 
                     return list.ToArray();
                 }
-                catch (Exception xcptn) { this.exceptions.Add(xcptn); }
+                catch (Exception xcptn)
+                {
+                    this.exceptions.Add(xcptn);
+                }
             }
-            catch (Exception exception) { this.exceptions.Add(exception); }
+            catch (Exception exception)
+            {
+                this.exceptions.Add(exception);
+            }
 
             return null;
         }
@@ -449,8 +504,15 @@ namespace Bytloos.Web
                 var ftpReader = new StreamReader(this.stream);
                 var directoryRaw = string.Empty;
 
-                try { while (ftpReader.Peek() != -1) { directoryRaw += ftpReader.ReadLine() + "|"; } }
-                catch (Exception xcptn) { this.exceptions.Add(xcptn); }
+                try
+                {
+                    while (ftpReader.Peek() != -1)
+                        directoryRaw += ftpReader.ReadLine() + "|";
+                }
+                catch (Exception xcptn)
+                {
+                    this.exceptions.Add(xcptn);
+                }
 
                 ftpReader.Close();
 
@@ -458,10 +520,20 @@ namespace Bytloos.Web
                 this.response.Close();
                 this.request = null;
 
-                try { var directoryList = directoryRaw.Split("|".ToCharArray()); return directoryList; }
-                catch (Exception xcptn) { this.exceptions.Add(xcptn); }
+                try
+                {
+                    var directoryList = directoryRaw.Split("|".ToCharArray());
+                    return directoryList;
+                }
+                catch (Exception xcptn)
+                {
+                    this.exceptions.Add(xcptn);
+                }
             }
-            catch (Exception exception) { this.exceptions.Add(exception); }
+            catch (Exception exception)
+            {
+                this.exceptions.Add(exception);
+            }
 
             return null;
         }

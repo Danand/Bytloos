@@ -36,7 +36,7 @@ namespace Bytloos.Extensions
         public static T ElementAtReverse<T>(this IEnumerable<T> source, int index)
         {
             var array = source as T[] ?? source.ToArray();
-            return array.ElementAt((array.Count() - 1) - index);
+            return array.ElementAt((array.Length - 1) - index);
         }
 
         /// <summary>
@@ -49,7 +49,7 @@ namespace Bytloos.Extensions
         public static T ElementAtReverseOrDefault<T>(this IEnumerable<T> source, int index)
         {
             var array = source as T[] ?? source.ToArray();
-            return array.ElementAtOrDefault((array.Count() - 1) - index);
+            return array.ElementAtOrDefault((array.Length - 1) - index);
         }
 
         /// <summary>
@@ -77,7 +77,14 @@ namespace Bytloos.Extensions
         /// <returns>Element in enumerable collection of arrays by first value of array</returns>
         public static IEnumerable<T> FindElementByKey<T>(this IEnumerable<T[]> source, T key, int keyPosition = 0)
         {
-            return source.FirstOrDefault(element => element[keyPosition < element.Count() ? keyPosition : element.Count() - 1].Equals(key));
+            return source
+                .FirstOrDefault(
+                    element =>
+                        element
+                            [keyPosition < element.Length
+                                ? keyPosition
+                                : element.Length - 1]
+                                    .Equals(key));
         }
 
         /// <summary>

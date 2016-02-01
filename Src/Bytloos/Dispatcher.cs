@@ -270,7 +270,10 @@ namespace Bytloos
         /// </summary>
         /// <param name="eventKey">Event key.</param>
         /// <param name="handler">Action.</param>
-        public static void Unsubscribe(TKey eventKey, Action handler) { handlersList[eventKey].Remove(handler); }
+        public static void Unsubscribe(TKey eventKey, Action handler)
+        {
+            handlersList[eventKey].Remove(handler);
+        }
 
         #region Unsubscribers
 

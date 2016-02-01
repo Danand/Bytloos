@@ -10,6 +10,8 @@ namespace Bytloos.Extensions
     /// </summary>
     public static class StringExtensions
     {
+        private static readonly char[] SENTENCE_SPLITTING_CHARACTERS = { ' ', '.', '?', '—', ':', '–', ';', ',' };
+
         /// <summary>
         /// Counts entries of some string.
         /// </summary>
@@ -29,7 +31,7 @@ namespace Bytloos.Extensions
         public static int CountWords(this string source)
         {
             return source.Split(
-                separator:  new [] { ' ', '.', '?', '—', ':', '–', ';', ',' },
+                separator:  SENTENCE_SPLITTING_CHARACTERS,
                 options:    StringSplitOptions.RemoveEmptyEntries).Length;
         }
 
@@ -170,7 +172,7 @@ namespace Bytloos.Extensions
 
             var words = source.Split(' ').ToList();
 
-            if(words.Count > 1)
+            if (words.Count > 1)
                 words.Remove(words.Last());
 
             source = string.Join(" ", words).Trim();

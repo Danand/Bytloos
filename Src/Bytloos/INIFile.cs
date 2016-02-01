@@ -31,7 +31,10 @@ namespace Bytloos
         /// Creates or loads INI file.
         /// </summary>
         /// <param name="path"></param>
-        public INIFile(string path) { this.path = path; }
+        public INIFile(string path)
+        {
+            this.path = path;
+        }
 
         /// <summary>
         /// Read or write INI value.

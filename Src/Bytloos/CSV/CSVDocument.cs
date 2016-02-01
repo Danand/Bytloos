@@ -35,7 +35,7 @@ namespace Bytloos.CSV
         public CSVDocument(
             string      path,
             Encoding    encoding            = null,
-            char        delimiter           = ';',
+            char        delimiter           = Cell.DEFAULT_DELIMITER,
             bool        silentMode          = false,
             int         columnsAmountFilter = 0,
             string[]    readingLineFilters  = null)
@@ -132,7 +132,10 @@ namespace Bytloos.CSV
         /// <summary>
         /// Disposes and saves changes to file.
         /// </summary>
-        public void Dispose() { Save(); }
+        public void Dispose()
+        {
+            Save();
+        }
 
         /// <summary>
         /// Loads CSV document from file.
@@ -167,9 +170,10 @@ namespace Bytloos.CSV
 
                         if (!waitingForComplete)
                         {
-                            cellStrings.Add(cellStringBuffer != null
-                                ? cellStringBuffer + cellStringDraft
-                                : cellStringDraft);
+                            cellStrings.Add(
+                                cellStringBuffer != null
+                                    ? cellStringBuffer + cellStringDraft
+                                    : cellStringDraft);
 
                             cellStringBuffer = null;
                         }
@@ -212,8 +216,11 @@ namespace Bytloos.CSV
             using (var sw = new StreamWriter(resultPath, false, this.encoding))
                 sw.WriteLine(
                     string.Join(
-                        Environment.NewLine,
-                        Rows.Select(row => string.Join(this.delimiter.ToString(CultureInfo.InvariantCulture), row))));
+                        separator:  Environment.NewLine,
+                        values:     Rows.Select(
+                                    row => string.Join(
+                                        separator:  this.delimiter.ToString(CultureInfo.InvariantCulture),
+                                        values:     row))));
         }
 
         /// <summary>
@@ -221,21 +228,30 @@ namespace Bytloos.CSV
         /// </summary>
         /// <param name="key">String representation of row's first cell.</param>
         /// <returns>Row of cells.</returns>
-        public List<Cell> GetRow(string key) { return GetLine(key); }
+        public List<Cell> GetRow(string key)
+        {
+            return GetLine(key);
+        }
 
         /// <summary>
         /// Gets column by string key.
         /// </summary>
         /// <param name="key">String representation of column's first cell.</param>
         /// <returns>Column of cells.</returns>
-        public List<Cell> GetColumn(string key) { return GetLine(key, isColumn: true); }
+        public List<Cell> GetColumn(string key)
+        {
+            return GetLine(key, isColumn: true);
+        }
 
         /// <summary>
         /// Clears cells.
         /// </summary>
-        public void Clear() { this.cells = new List<Cell>(); }
+        public void Clear()
+        {
+            this.cells = new List<Cell>();
+        }
 
-#region Append and Insert overloads
+        #region Append and Insert overloads
 
         /// <summary>
         /// Appends cells to last row.
@@ -351,7 +367,7 @@ namespace Bytloos.CSV
         /// <param name="position">Index.</param>
         public void InsertColumn(string[] cellStrings, int position) { InsertLine(cellStrings.Select(cell => (object)cell).ToArray(), position, isColumn: true); }
 
-#endregion
+        #endregion
 
         private void AppendLine<TObject>(
             IEnumerable<TObject>    cellObjects,
@@ -359,17 +375,19 @@ namespace Bytloos.CSV
             int                     inset       = -1,
             bool                    isNewLine   = true)
         {
-            var x = ComputePosition(
-                isVertical: false,
-                forColumn:  isColumn,
-                forNewLine: isNewLine,
-                inset:      inset);
+            var x
+                = ComputePosition(
+                    isVertical: false,
+                    forColumn:  isColumn,
+                    forNewLine: isNewLine,
+                    inset:      inset);
 
-            var y = ComputePosition(
-                isVertical: true,
-                forColumn:  isColumn,
-                forNewLine: isNewLine,
-                inset:      inset);
+            var y
+                = ComputePosition(
+                    isVertical: true,
+                    forColumn:  isColumn,
+                    forNewLine: isNewLine,
+                    inset:      inset);
 
             if (cellObjects is List<Cell>)
             {
@@ -393,18 +411,31 @@ namespace Bytloos.CSV
                             data:       cellObject != null ? cellObject.ToString() : string.Empty));
             }
 
-            if(inset > -1)
+            if (inset > -1)
                 CleanUpCells();
 
             cachedRows = null;
             cachedColumns = null;
         }
 
-        private void InsertLine(List<Cell> cellObjects, int position, bool isColumn = false) { AppendLine(cellObjects, isColumn, position); }
+        private void InsertLine(List<Cell> cellObjects, int position, bool isColumn = false)
+        {
+            AppendLine(cellObjects, isColumn, position);
+        }
 
-        private void InsertLine(object[] cellObjects, int position, bool isColumn = false) { AppendLine(cellObjects, isColumn, position); }
+        private void InsertLine(object[] cellObjects, int position, bool isColumn = false)
+        {
+            AppendLine(cellObjects, isColumn, position);
+        }
 
-        private void CleanUpCells() { this.cells = this.cells.GroupBy(cell => new { cell.X, cell.Y }).Select(group => group.Last()).ToList(); }
+        private void CleanUpCells()
+        {
+            this.cells
+                = this.cells
+                    .GroupBy(cell => new { cell.X, cell.Y })
+                    .Select(group => group.Last())
+                    .ToList();
+        }
 
         private int ComputePosition(
             bool    isVertical  = false,
@@ -418,16 +449,14 @@ namespace Bytloos.CSV
                     : forColumn ? Columns.Count : 0;
 
             if (!forNewLine)
-            {
                 point
                     = isVertical
                         ? !forColumn
-                            ? Rows.Any() ? Rows.Count - 1 : 0 
+                            ? Rows.Any() ? Rows.Count - 1 : 0
                             : Columns.Any() ? Columns.Last().Count : 0
                         : !forColumn
                             ? Rows.Any() ? Rows.Last().Count : 0
                             : Columns.Any() ? Columns.Count - 1 : 0;
-            }
 
             return isVertical
                 ? inset > -1 && !forColumn ? inset : point
