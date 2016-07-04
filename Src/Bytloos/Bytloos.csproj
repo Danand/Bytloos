@@ -58,6 +58,7 @@
     <Compile Include="Extensions\CryptExtensions.cs" />
     <Compile Include="CSV\Cell.cs" />
     <Compile Include="CSV\CSVDocument.cs" />
+    <Compile Include="Extensions\ReflectionExtensions.cs" />
     <Compile Include="Extensions\WebExtensions.cs" />
     <Compile Include="FilePath.cs" />
     <Compile Include="INIFile.cs" />
