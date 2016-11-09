@@ -5,6 +5,7 @@
     /// </summary>
     public enum HTTPHeaderKey
     {
+        None,
         UserAgent,
         Accept,
         Host,
