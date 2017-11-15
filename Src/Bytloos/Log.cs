@@ -76,7 +76,7 @@ namespace Bytloos
         /// <summary>
         /// Appends new message.
         /// </summary>
-        /// <param name="message"></param>
+        /// <param name="message">Message.</param>
         public void Append(string message)
         {
             this.lines.Add(new Tuple<DateTime, object>(DateTime.Now, message));
@@ -85,7 +85,7 @@ namespace Bytloos
         /// <summary>
         /// Appends new exception.
         /// </summary>
-        /// <param name="exception"></param>
+        /// <param name="exception">Exception.</param>
         public void Append(Exception exception)
         {
             this.lines.Add(new Tuple<DateTime, object>(DateTime.Now, exception));
@@ -94,7 +94,7 @@ namespace Bytloos
         /// <summary>
         /// Saves changes to file.
         /// </summary>
-        /// <param name="saveAs"></param>
+        /// <param name="saveAs">Specified path.</param>
         public void Save(string saveAs = null)
         {
             var resultPath = saveAs ?? this.path;

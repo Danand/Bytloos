@@ -1,5 +1,4 @@
-﻿using System;
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 using System.Text;
 
 namespace Bytloos.Extensions
@@ -17,9 +16,7 @@ namespace Bytloos.Extensions
         public static string MD5(this string source)
         {
             var md5CryptoServiceProvider = new MD5CryptoServiceProvider();
-
             var hashBytes = md5CryptoServiceProvider.ComputeHash(Encoding.Default.GetBytes(source));
-
             var stringBuilder = new StringBuilder();
 
             foreach (var hashByte in hashBytes)
