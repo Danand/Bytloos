@@ -1,9 +1,9 @@
-#Bytloos#
-###(aka Bydlo Tools) – essential bydlocoding kit.###
+# Bytloos
+### (aka Bydlo Tools) – essential bydlocoding kit.
 
 "Bydlo" in some Slavic languages means large crowd of working class people.
 
-The bydlocoding literally means codecrafting for small business needs. It's generally cheap, fast and based on reinvented wheels.
+The bydlocoding literally stands for codecrafting for small business needs. It's generally cheap, fast and based on reinvented wheels.
 
 So there are some tools for more flexible bydlocoding development:
 * HTTP client;

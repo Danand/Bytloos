@@ -151,9 +151,7 @@ namespace Bytloos.Extensions
         public static string Reversed(this string source)
         {
             var charArray = source.ToCharArray();
-
             Array.Reverse(charArray);
-
             return new string(charArray);
         }
 

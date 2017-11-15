@@ -21,17 +21,22 @@ namespace Bytloos.Web
     {
         public delegate void OnStreamReading(long currentBytes, long totalBytes);
 
+        /// <summary>
+        /// Current response stream reading progress.
+        /// </summary>
+        public event OnStreamReading StreamReading = delegate {};
+
         private const int       DEFAULT_BUFFER_SIZE             = 2048;
         private const int       MULTIPART_BOUNDARY_LINE_LENGTH  = 28;
         private const string    DEFAULT_URL                     = "http://localhost";
         private const string    DEFAULT_POST_CONTENT_TYPE       = "application/x-www-form-urlencoded";
 
         private const string DEFAULT_USER_AGENT
-            = "Mozilla/5.0 (Windows NT 6.3) "
+            = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
                 + "AppleWebKit/537.36 (KHTML, like Gecko) "
-                + "Chrome/46.0.2490.80 "
+                + "Chrome/61.0.3163.100 "
                 + "Safari/537.36 "
-                + "OPR/33.0.1990.58";
+                + "OPR/48.0.2685.52";
 
         private const string DEFAULT_ACCEPT
             = "text/html, "
@@ -132,11 +137,6 @@ namespace Bytloos.Web
         /// List of occured exceptions.
         /// </summary>
         public List<Exception> Exceptions { get { return this.exceptions; } }
-
-        /// <summary>
-        /// Current response stream reading progress.
-        /// </summary>
-        public event OnStreamReading StreamReading;
 
         /// <summary>
         /// Makes memberwise clone of object.
@@ -808,13 +808,12 @@ namespace Bytloos.Web
 
             while ((bytesSize = responseStream.Read(bytesBuffer, 0, bytesBuffer.Length)) > 0)
             {
-                if (memoryStream.Length == 0 && StreamReading != null)
+                if (memoryStream.Length == 0)
                     StreamReading(memoryStream.Length, response.ContentLength);
 
                 memoryStream.Write(bytesBuffer, 0, bytesSize);
 
-                if (StreamReading != null)
-                    StreamReading(memoryStream.Length, response.ContentLength);
+                StreamReading(memoryStream.Length, response.ContentLength);
             }
 
             memoryStream.Position = 0;

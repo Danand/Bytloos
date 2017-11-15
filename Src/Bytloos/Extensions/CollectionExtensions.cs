@@ -106,9 +106,7 @@ namespace Bytloos.Extensions
         public static NameValueCollection ToNameValueCollection(this Dictionary<string, string> source)
         {
             var nameValueCollection = new NameValueCollection();
-
             source.ToList().ForEach(element => nameValueCollection.Add(element.Key, element.Value));
-
             return nameValueCollection;
         }
 
