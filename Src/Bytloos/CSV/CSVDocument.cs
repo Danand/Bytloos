@@ -13,8 +13,10 @@ namespace Bytloos.CSV
     public class CSVDocument : IDisposable
     {
         private readonly int columnsAmountFilter;
+        private readonly bool swapQuotes;
         private readonly bool isSilent;
         private readonly char delimiter;
+        private readonly char quoteChar;
         private readonly string path;
         private readonly string[] readingLineFilters;
         private readonly Encoding encoding;
@@ -23,12 +25,15 @@ namespace Bytloos.CSV
         private List<List<Cell>> cachedRows;
         private List<List<Cell>> cachedColumns;
 
+        // TODO: move parameters to settings class.
         /// <summary>
         /// Creates CSV document object.
         /// </summary>
         /// <param name="path">Path to CSV file.</param>
         /// <param name="encoding">Encoding.</param>
         /// <param name="delimiter">Delimiter.</param>
+        /// <param name="quoteChar">Quote char.</param>
+        /// <param name="swapQuotes">Swap quotes between " and ' if cell contains ones.</param>
         /// <param name="silentMode">Suppress exceptions.</param>
         /// <param name="columnsAmountFilter">Number of columns limiting to.</param>
         /// <param name="readingLineFilters">Array of string using as filter when parsing CSV.</param>
@@ -36,6 +41,8 @@ namespace Bytloos.CSV
             string      path,
             Encoding    encoding            = null,
             char        delimiter           = Cell.DEFAULT_DELIMITER,
+            char        quoteChar           = Cell.DEFAULT_QUOTE,
+            bool        swapQuotes          = false,
             bool        silentMode          = false,
             int         columnsAmountFilter = 0,
             string[]    readingLineFilters  = null)
@@ -43,6 +50,8 @@ namespace Bytloos.CSV
             this.path = path;
             this.encoding = encoding ?? Encoding.Default;
             this.delimiter = delimiter;
+            this.quoteChar = quoteChar;
+            this.swapQuotes = swapQuotes;
             this.isSilent = silentMode;
             this.columnsAmountFilter = columnsAmountFilter;
             this.readingLineFilters = readingLineFilters;
@@ -165,8 +174,8 @@ namespace Bytloos.CSV
                     foreach (var cellStringDraft in cellStringsDraft)
                     {
                         waitingForComplete
-                            = (cellStringDraft.FirstOrDefault() == Cell.QUOTE && cellStringDraft.LastOrDefault() != Cell.QUOTE) ||
-                              (waitingForComplete && cellStringDraft.LastOrDefault() != Cell.QUOTE);
+                            = (cellStringDraft.FirstOrDefault() == this.quoteChar && cellStringDraft.LastOrDefault() != this.quoteChar) ||
+                              (waitingForComplete && cellStringDraft.LastOrDefault() != this.quoteChar);
 
                         if (!waitingForComplete)
                         {
@@ -194,7 +203,8 @@ namespace Bytloos.CSV
                                 yPosition:      y,
                                 data:           cellString,
                                 dataParsing:    true,
-                                delimiter:      this.delimiter));
+                                delimiter:      this.delimiter,
+                                quote:          this.quoteChar));
 
                     y++;
                 }
@@ -408,7 +418,9 @@ namespace Bytloos.CSV
                             parentDoc:  this,
                             xPosition:  isColumn ? x : x++,
                             yPosition:  !isColumn ? y : y++,
-                            data:       cellObject != null ? cellObject.ToString() : string.Empty));
+                            data:       cellObject != null ? cellObject.ToString() : string.Empty,
+                            quote:      this.quoteChar,
+                            swapQuotes: this.swapQuotes));
             }
 
             if (inset > -1)
@@ -488,7 +500,8 @@ namespace Bytloos.CSV
                             parentDoc:  this,
                             xPosition:  cell.X,
                             yPosition:  cell.Y,
-                            data:       string.Empty));
+                            data:       string.Empty,
+                            quote:      this.quoteChar));
 
                 lines[vertical ? cell.X : cell.Y].Insert(vertical ? cell.Y : cell.X, cell);
             }
