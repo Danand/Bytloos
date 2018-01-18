@@ -219,6 +219,11 @@ namespace Bytloos.Web
             {
                 this.exceptions.Add(exception);
 
+                string content;
+
+                if (TryHandleWebException(exception, encoding, out content))
+                    return content;
+
                 if (ProxyAutoswitching)
                     SwitchProxy();
 
@@ -280,6 +285,11 @@ namespace Bytloos.Web
             catch (Exception exception)
             {
                 this.exceptions.Add(exception);
+
+                string content;
+
+                if (TryHandleWebException(exception, encoding, out content))
+                    return content;
 
                 if (ProxyAutoswitching)
                     SwitchProxy();
@@ -346,6 +356,11 @@ namespace Bytloos.Web
             catch (Exception exception)
             {
                 this.exceptions.Add(exception);
+
+                string content;
+
+                if (TryHandleWebException(exception, encoding, out content))
+                    return content;
 
                 if (ProxyAutoswitching)
                     SwitchProxy();
@@ -785,11 +800,7 @@ namespace Bytloos.Web
         {
             var response = request.GetResponse(quietly: SilentMode);
 
-            if (encoding == null && !string.IsNullOrEmpty(response.ContentType))
-                encoding
-                    = response.ContentType.Contains("=")
-                        ? Encoding.GetEncoding(response.ContentType.Split('=')[1])
-                        : Encoding.Default;
+            encoding = DetectEncoding(encoding, response);
 
             var responseStream = response.GetResponseStream();
 
@@ -818,7 +829,7 @@ namespace Bytloos.Web
 
             memoryStream.Position = 0;
 
-            var streamReader = new StreamReader(memoryStream, encoding ?? Encoding.Default);
+            var streamReader = new StreamReader(memoryStream, encoding);
 
             var content = streamReader.ReadToEnd();
 
@@ -831,6 +842,38 @@ namespace Bytloos.Web
             Referer = request.RequestUri.AbsoluteUri;
 
             return content;
+        }
+
+        private Encoding DetectEncoding(Encoding encoding, HttpWebResponse response)
+        {
+            if (encoding == null && !string.IsNullOrEmpty(response.ContentType))
+                encoding = response.ContentType.Contains("=") ? Encoding.GetEncoding(response.ContentType.Split('=')[1]) : null;
+
+            return encoding ?? Encoding.Default;
+        }
+
+        private bool TryHandleWebException(Exception exception, Encoding encoding, out string content)
+        {
+            content = null;
+
+            if (!SilentMode)
+                return false;
+
+            var webException = exception as WebException;
+
+            if (webException != null)
+            {
+                var response = webException.Response;
+
+                encoding = DetectEncoding(encoding, (HttpWebResponse)response);
+
+                using (var sr = new StreamReader(response.GetResponseStream(), encoding))
+                    content = sr.ReadToEnd();
+
+                return true;
+            }
+
+            return false;
         }
     }
 }
