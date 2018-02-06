@@ -12,8 +12,8 @@
         /// <param name="value">Value.</param>
         public HTTPHeader(HTTPHeaderKey key, string value)
         {
-            this.PresetKey = key;
-            this.Value = value;
+            PresetKey = key;
+            Value = value;
         }
 
         /// <summary>
@@ -23,19 +23,19 @@
         /// <param name="value">Value.</param>
         public HTTPHeader(string key, string value)
         {
-            this.CustomKey = key;
-            this.Value = value;
+            CustomKey = key;
+            Value = value;
         }
 
         /// <summary>
         /// Preset enum key.
         /// </summary>
-        public HTTPHeaderKey PresetKey { get; private set; }
+        public HTTPHeaderKey PresetKey { get; }
 
         /// <summary>
         /// Custom string key.
         /// </summary>
-        public string CustomKey { get; private set; }
+        public string CustomKey { get; }
 
         /// <summary>
         /// Value.

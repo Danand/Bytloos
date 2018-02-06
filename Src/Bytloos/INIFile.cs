@@ -3,6 +3,9 @@ using System.Text;
 
 namespace Bytloos
 {
+    /// <summary>
+    /// Simple INI wrapper.
+    /// </summary>
     public class INIFile
     {
         private const int       DEFAULT_STRING_BUILDER_CAPACITY = 255;
@@ -44,7 +47,6 @@ namespace Bytloos
         public string this[string key]
         {
             get { return this[DEFAULT_SECTION, key]; }
-
             set { this[DEFAULT_SECTION, key] = value; }
         }
 
@@ -57,7 +59,6 @@ namespace Bytloos
         public string this[string section, string key]
         {
             get { return Read(section, key); }
-
             set { Write(section, key, value); }
         }
 
@@ -83,7 +84,7 @@ namespace Bytloos
                 section:    section,
                 key:        key,
                 value:      value,
-                filePath:   this.path);
+                filePath:   path);
         }
 
         /// <summary>
@@ -114,7 +115,7 @@ namespace Bytloos
                 defaultValue:   string.Empty,
                 outValue:       stringBuilder,
                 size:           stringBuilder.Capacity,
-                filePath:       this.path);
+                filePath:       path);
 
             return stringBuilder.ToString();
         }

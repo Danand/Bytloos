@@ -12,9 +12,11 @@ namespace Bytloos.CSV
     /// </summary>
     public class CSVDocument : IDisposable
     {
+        private const char DEFAULT_SOURCE_SEPARATOR = ';';
+
         private readonly int columnsAmountFilter;
         private readonly bool swapQuotes;
-        private readonly bool isSilent;
+        private readonly bool silentMode;
         private readonly char delimiter;
         private readonly char quoteChar;
         private readonly string path;
@@ -52,10 +54,11 @@ namespace Bytloos.CSV
             this.delimiter = delimiter;
             this.quoteChar = quoteChar;
             this.swapQuotes = swapQuotes;
-            this.isSilent = silentMode;
+            this.silentMode = silentMode;
             this.columnsAmountFilter = columnsAmountFilter;
             this.readingLineFilters = readingLineFilters;
-            this.cells = new List<Cell>();
+
+            cells = new List<Cell>();
 
             if (File.Exists(this.path))
                 Load(this.path, this.encoding, this.delimiter);
@@ -85,16 +88,24 @@ namespace Bytloos.CSV
         public static void Serialize(object target, CSVDocument document)
         {
             foreach (var fieldInfo in target.GetType().GetFields())
+            {
                 if (fieldInfo.FieldType.GetInterfaces().Contains(typeof(ISerializable)))
+                {
                     document.AppendRow(
                         fieldInfo.Name,
                         ((ISerializable)fieldInfo.GetValue(target)).GetStringValue());
+                }
+            }
 
             foreach (var propertyInfo in target.GetType().GetProperties())
+            {
                 if (propertyInfo.PropertyType.GetInterfaces().Contains(typeof(ISerializable)))
+                {
                     document.AppendRow(
                         propertyInfo.Name,
                         ((ISerializable)propertyInfo.GetValue(obj: target, index: null)).GetStringValue());
+                }
+            }
 
             document.Save();
         }
@@ -111,21 +122,22 @@ namespace Bytloos.CSV
             var result = new T();
 
             foreach (var row in document.Rows)
+            {
                 foreach (var fieldInfo in typeof(T).GetFields())
-                    if (fieldInfo.Name == row.First().Data &&
-                        fieldInfo.FieldType.GetInterfaces().Contains(typeof(ISerializable)))
+                {
+                    if (fieldInfo.Name == row.First().Data && fieldInfo.FieldType.GetInterfaces().Contains(typeof(ISerializable)))
                     {
-                        fieldInfo.SetValue(
-                            obj:    result,
-                            value:  Activator.CreateInstance(fieldInfo.FieldType));
-
+                        fieldInfo.SetValue(result, Activator.CreateInstance(fieldInfo.FieldType));
                         ((ISerializable)fieldInfo.GetValue(result)).SetValueFromString(row.Last().Data);
                     }
+                }
+            }
 
             foreach (var row in document.Rows)
+            {
                 foreach (var propertyInfo in typeof(T).GetProperties())
-                    if (propertyInfo.Name == row.First().Data &&
-                        propertyInfo.PropertyType.GetInterfaces().Contains(typeof(ISerializable)))
+                {
+                    if (propertyInfo.Name == row.First().Data && propertyInfo.PropertyType.GetInterfaces().Contains(typeof(ISerializable)))
                     {
                         propertyInfo.SetValue(
                             obj:    result,
@@ -134,10 +146,13 @@ namespace Bytloos.CSV
 
                         ((ISerializable)propertyInfo.GetValue(obj: result, index: null)).SetValueFromString(row.Last().Data);
                     }
+                }
+            }
 
             return result;
         }
 
+        /// <inheritdoc />
         /// <summary>
         /// Disposes and saves changes to file.
         /// </summary>
@@ -152,7 +167,7 @@ namespace Bytloos.CSV
         /// <param name="sourcePath">Path to CSV file.</param>
         /// <param name="sourceEncoding">Encoding.</param>
         /// <param name="sourceSeparator">Delimiter.</param>
-        public void Load(string sourcePath, Encoding sourceEncoding = null, char sourceSeparator = ';')
+        public void Load(string sourcePath, Encoding sourceEncoding = null, char sourceSeparator = DEFAULT_SOURCE_SEPARATOR)
         {
             using (var streamReader = new StreamReader(sourcePath, sourceEncoding ?? Encoding.Default))
             {
@@ -163,7 +178,7 @@ namespace Bytloos.CSV
                     var x = 0;
                     var line = streamReader.ReadLine();
 
-                    if (line == null || (this.readingLineFilters != null && readingLineFilters.Any(line.Contains)))
+                    if (line == null || (readingLineFilters != null && readingLineFilters.Any(line.Contains)))
                         continue;
 
                     var cellStrings = new List<String>();
@@ -174,8 +189,8 @@ namespace Bytloos.CSV
                     foreach (var cellStringDraft in cellStringsDraft)
                     {
                         waitingForComplete
-                            = (cellStringDraft.FirstOrDefault() == this.quoteChar && cellStringDraft.LastOrDefault() != this.quoteChar) ||
-                              (waitingForComplete && cellStringDraft.LastOrDefault() != this.quoteChar);
+                            = (cellStringDraft.FirstOrDefault() == quoteChar && cellStringDraft.LastOrDefault() != quoteChar) ||
+                              (waitingForComplete && cellStringDraft.LastOrDefault() != quoteChar);
 
                         if (!waitingForComplete)
                         {
@@ -192,19 +207,21 @@ namespace Bytloos.CSV
                         }
                     }
 
-                    if (this.columnsAmountFilter != 0 && cellStrings.Count != this.columnsAmountFilter)
+                    if (columnsAmountFilter != 0 && cellStrings.Count != columnsAmountFilter)
                         continue;
 
                     foreach (var cellString in cellStrings)
-                        this.cells.Add(
+                    {
+                        cells.Add(
                             new Cell(
                                 parentDoc:      this,
                                 xPosition:      x++,
                                 yPosition:      y,
                                 data:           cellString,
                                 dataParsing:    true,
-                                delimiter:      this.delimiter,
-                                quote:          this.quoteChar));
+                                delimiter:      delimiter,
+                                quote:          quoteChar));
+                    }
 
                     y++;
                 }
@@ -217,20 +234,22 @@ namespace Bytloos.CSV
         /// <param name="saveAs">Save in another directory.</param>
         public void Save(string saveAs = null)
         {
-            var resultPath = saveAs ?? this.path;
-
+            var resultPath = saveAs ?? path;
             var dir = Path.GetDirectoryName(resultPath);
 
-            if (dir != null && !Directory.Exists(dir)) Directory.CreateDirectory(dir);
+            if (dir != null && !Directory.Exists(dir))
+                Directory.CreateDirectory(dir);
 
-            using (var sw = new StreamWriter(resultPath, false, this.encoding))
+            using (var sw = new StreamWriter(resultPath, false, encoding))
+            {
                 sw.WriteLine(
                     string.Join(
                         separator:  Environment.NewLine,
                         values:     Rows.Select(
-                                    row => string.Join(
-                                        separator:  this.delimiter.ToString(CultureInfo.InvariantCulture),
-                                        values:     row))));
+                                        row => string.Join(
+                                                separator:  delimiter.ToString(CultureInfo.InvariantCulture),
+                                                values:     row))));
+            }
         }
 
         /// <summary>
@@ -258,10 +277,8 @@ namespace Bytloos.CSV
         /// </summary>
         public void Clear()
         {
-            this.cells = new List<Cell>();
+            cells = new List<Cell>();
         }
-
-        #region Append and Insert overloads
 
         /// <summary>
         /// Appends cells to last row.
@@ -377,8 +394,6 @@ namespace Bytloos.CSV
         /// <param name="position">Index.</param>
         public void InsertColumn(string[] cellStrings, int position) { InsertLine(cellStrings.Select(cell => (object)cell).ToArray(), position, isColumn: true); }
 
-        #endregion
-
         private void AppendLine<TObject>(
             IEnumerable<TObject>    cellObjects,
             bool                    isColumn    = false,
@@ -407,20 +422,22 @@ namespace Bytloos.CSV
                         xPosition:  isColumn ? x : x++,
                         yPosition:  !isColumn ? y : y++);
 
-                    this.cells.Add(clonedCell);
+                    cells.Add(clonedCell);
                 }
             }
             else
             {
                 foreach (var cellObject in cellObjects)
-                    this.cells.Add(
+                {
+                    cells.Add(
                         new Cell(
                             parentDoc:  this,
                             xPosition:  isColumn ? x : x++,
                             yPosition:  !isColumn ? y : y++,
                             data:       cellObject != null ? cellObject.ToString() : string.Empty,
-                            quote:      this.quoteChar,
-                            swapQuotes: this.swapQuotes));
+                            quote:      quoteChar,
+                            swapQuotes: swapQuotes));
+                }
             }
 
             if (inset > -1)
@@ -442,8 +459,8 @@ namespace Bytloos.CSV
 
         private void CleanUpCells()
         {
-            this.cells
-                = this.cells
+            cells
+                = cells
                     .GroupBy(cell => new { cell.X, cell.Y })
                     .Select(group => group.Last())
                     .ToList();
@@ -461,6 +478,7 @@ namespace Bytloos.CSV
                     : forColumn ? Columns.Count : 0;
 
             if (!forNewLine)
+            {
                 point
                     = isVertical
                         ? !forColumn
@@ -469,6 +487,7 @@ namespace Bytloos.CSV
                         : !forColumn
                             ? Rows.Any() ? Rows.Last().Count : 0
                             : Columns.Any() ? Columns.Count - 1 : 0;
+            }
 
             return isVertical
                 ? inset > -1 && !forColumn ? inset : point
@@ -479,7 +498,7 @@ namespace Bytloos.CSV
         {
             var result = (isColumn ? Columns : Rows).Find(line => line[0].Data == key);
 
-            if (result == null && !this.isSilent)
+            if (result == null && !silentMode)
                 throw new InvalidOperationException();
 
             return result;
@@ -489,19 +508,21 @@ namespace Bytloos.CSV
         {
             var lines = new List<List<Cell>>();
 
-            foreach (var cell in this.cells)
+            foreach (var cell in cells)
             {
                 while ((vertical ? cell.X : cell.Y) >= lines.Count)
                     lines.Add(new List<Cell>());
 
                 while ((vertical ? cell.Y : cell.X) > lines[vertical ? cell.X : cell.Y].Count)
+                {
                     lines[vertical ? cell.X : cell.Y].Add(
                         new Cell(
                             parentDoc:  this,
                             xPosition:  cell.X,
                             yPosition:  cell.Y,
                             data:       string.Empty,
-                            quote:      this.quoteChar));
+                            quote:      quoteChar));
+                }
 
                 lines[vertical ? cell.X : cell.Y].Insert(vertical ? cell.Y : cell.X, cell);
             }

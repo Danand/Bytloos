@@ -50,12 +50,9 @@ namespace Bytloos
             using (var ms = new MemoryStream())
             {
                 var bf = new BinaryFormatter();
-
                 bf.Serialize(ms, source);
-
                 ms.Position = 0;
-
-                return (T) bf.Deserialize(ms);
+                return (T)bf.Deserialize(ms);
             }
         }
     }

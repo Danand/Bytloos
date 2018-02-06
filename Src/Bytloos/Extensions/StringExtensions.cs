@@ -30,9 +30,7 @@ namespace Bytloos.Extensions
         /// <returns>Amount of words in string.</returns>
         public static int CountWords(this string source)
         {
-            return source.Split(
-                separator:  SENTENCE_SPLITTING_CHARACTERS,
-                options:    StringSplitOptions.RemoveEmptyEntries).Length;
+            return source.Split(SENTENCE_SPLITTING_CHARACTERS, StringSplitOptions.RemoveEmptyEntries).Length;
         }
 
         /// <summary>
@@ -217,7 +215,7 @@ namespace Bytloos.Extensions
             punctsMt = Regex.Matches(source, @"(\S)([\u2012\u2013\u2014])(\S)", RegexOptions.Singleline);
 
             foreach (Match punctMatch in punctsMt)
-                source = source.Replace(punctMatch.Groups[0].ToString(), punctMatch.Groups[1] + " " + punctMatch.Groups[2] + " " + punctMatch.Groups[3]);
+                source = source.Replace(punctMatch.Groups[0].ToString(), $"{punctMatch.Groups[1]} {punctMatch.Groups[2]} {punctMatch.Groups[3]}");
 
             punctsMt
                 = Regex.Matches(

@@ -12,7 +12,9 @@ namespace Bytloos
     /// </summary>
     public class Log : IDisposable
     {
-        private readonly bool isAppending;
+        private const string DEFAULT_DATE_FORMAT = "G";
+
+        private readonly bool append;
         private readonly string path;
         private readonly string dateFormat;
         private readonly Encoding encoding;
@@ -22,17 +24,21 @@ namespace Bytloos
         /// Creates log object.
         /// </summary>
         /// <param name="path">Path to save log.</param>
-        /// <param name="appendMode">Overrides file content if true.</param>
+        /// <param name="append">Overrides file content if true.</param>
         /// <param name="encoding">Encoding.</param>
         /// <param name="dateFormat">DateTime format.</param>
-        public Log(string path, bool appendMode = true, Encoding encoding = null, string dateFormat = "G")
+        public Log(
+            string      path,
+            bool        append      = true,
+            Encoding    encoding    = null,
+            string      dateFormat  = DEFAULT_DATE_FORMAT)
         {
             this.path = path;
-            this.isAppending = appendMode;
+            this.append = append;
             this.encoding = encoding;
             this.dateFormat = dateFormat;
 
-            this.lines = new List<Tuple<DateTime, object>>();
+            lines = new List<Tuple<DateTime, object>>();
         }
 
         /// <summary>
@@ -42,7 +48,7 @@ namespace Bytloos
         {
             get
             {
-                return this.lines
+                return lines
                     .Select(tuple => tuple.Item2)
                     .OfType<string>()
                     .ToList()
@@ -57,7 +63,7 @@ namespace Bytloos
         {
             get
             {
-                return this.lines
+                return lines
                     .Select(tuple => tuple.Item2)
                     .OfType<Exception>()
                     .ToList()
@@ -65,6 +71,7 @@ namespace Bytloos
             }
         }
 
+        /// <inheritdoc />
         /// <summary>
         /// Saves changes to file.
         /// </summary>
@@ -79,7 +86,7 @@ namespace Bytloos
         /// <param name="message">Message.</param>
         public void Append(string message)
         {
-            this.lines.Add(new Tuple<DateTime, object>(DateTime.Now, message));
+            lines.Add(new Tuple<DateTime, object>(DateTime.Now, message));
         }
 
         /// <summary>
@@ -88,7 +95,7 @@ namespace Bytloos
         /// <param name="exception">Exception.</param>
         public void Append(Exception exception)
         {
-            this.lines.Add(new Tuple<DateTime, object>(DateTime.Now, exception));
+            lines.Add(new Tuple<DateTime, object>(DateTime.Now, exception));
         }
 
         /// <summary>
@@ -97,27 +104,30 @@ namespace Bytloos
         /// <param name="saveAs">Specified path.</param>
         public void Save(string saveAs = null)
         {
-            var resultPath = saveAs ?? this.path;
-
+            var resultPath = saveAs ?? path;
             var dir = Path.GetDirectoryName(resultPath);
 
             if (dir != null && !Directory.Exists(dir))
                 Directory.CreateDirectory(dir);
 
-            using (var sw = new StreamWriter(this.path, this.isAppending, this.encoding ?? Encoding.Default))
-                foreach (var line in this.lines)
+            using (var sw = new StreamWriter(path, append, encoding ?? Encoding.Default))
+            {
+                foreach (var line in lines)
+                {
                     sw.WriteLine(
-                        line.Item2 is Exception
+                        line.Item2 is Exception exception
                             ? string.Format(
                                 "{0}{1}:{0}{2}{0}{3}{0}",
                                 Environment.NewLine,
-                                line.Item1.ToString(this.dateFormat),
-                                ((Exception)line.Item2),
-                                ((Exception)line.Item2).StackTrace)
+                                line.Item1.ToString(dateFormat),
+                                exception,
+                                exception.StackTrace)
                             : string.Format(
                                 "{0}: {1}",
-                                line.Item1.ToString(this.dateFormat),
+                                line.Item1.ToString(dateFormat),
                                 line.Item2));
+                }
+            }
         }
     }
 }

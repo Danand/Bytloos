@@ -4,6 +4,7 @@ using System.Linq;
 
 namespace Bytloos.CSV
 {
+    /// <inheritdoc />
     /// <summary>
     /// CSV data cell.
     /// </summary>
@@ -48,8 +49,8 @@ namespace Bytloos.CSV
 
             Data = dataParsing ? Parse(data) : data;
 
-            this.commonX = X = xPosition;
-            this.commonY = Y = yPosition;
+            commonX = X = xPosition;
+            commonY = Y = yPosition;
         }
 
         /// <summary>
@@ -81,7 +82,7 @@ namespace Bytloos.CSV
         /// </summary>
         public Cell ColumnKey
         {
-            get { return this.parentDoc.Columns[this.commonX].First(); }
+            get { return parentDoc.Columns[commonX].First(); }
         }
 
         /// <summary>
@@ -89,12 +90,12 @@ namespace Bytloos.CSV
         /// </summary>
         public Cell RowKey
         {
-            get { return this.parentDoc.Rows[this.commonY].First(); }
+            get { return parentDoc.Rows[commonY].First(); }
         }
 
         private string EscapedQuote
         {
-            get { return string.Format("{0}{1}", this.quote, this.quote); }
+            get { return $"{quote}{quote}"; }
         }
 
         private string EscapedData
@@ -115,7 +116,7 @@ namespace Bytloos.CSV
         /// <returns>Memberwise clone.</returns>
         public object Clone()
         {
-            return this.MemberwiseClone();
+            return MemberwiseClone();
         }
 
         /// <summary>
@@ -124,7 +125,7 @@ namespace Bytloos.CSV
         /// <returns>Escaped string representation of cell.</returns>
         public override string ToString()
         {
-            return this.EscapedData;
+            return EscapedData;
         }
 
         internal void MovePosition(int xPosition, int yPosition)
@@ -138,29 +139,29 @@ namespace Bytloos.CSV
             if (string.IsNullOrEmpty(cellString))
                 return cellString;
 
-            return cellString.First() == this.quote && cellString.Last() == this.quote
-                ? cellString.Trim(this.quote).Replace(EscapedQuote, this.quote.ToString())
+            return cellString.First() == quote && cellString.Last() == quote
+                ? cellString.Trim(quote).Replace(EscapedQuote, quote.ToString())
                 : cellString;
         }
 
         private string EscapeQuotes(string input)
         {
-            if (this.swapQuotes)
+            if (swapQuotes)
             {
-                var newQuote = this.quote == ALTERNATIVE_QUOTE ? DEFAULT_QUOTE : ALTERNATIVE_QUOTE;
-                var oldQuote = this.quote == DEFAULT_QUOTE ? DEFAULT_QUOTE : ALTERNATIVE_QUOTE;
+                var newQuote = quote == ALTERNATIVE_QUOTE ? DEFAULT_QUOTE : ALTERNATIVE_QUOTE;
+                var oldQuote = quote == DEFAULT_QUOTE ? DEFAULT_QUOTE : ALTERNATIVE_QUOTE;
 
                 if (newQuote != oldQuote)
                     return input.Replace(oldQuote.ToString(), newQuote.ToString());
             }
 
-            return input.Replace(this.quote.ToString(), EscapedQuote);
+            return input.Replace(quote.ToString(), EscapedQuote);
         }
 
         private string ChooseQuotes(string input)
         {
-            if (input.Contains(this.delimiter.ToString()) ||
-                input.Contains(this.quote.ToString()) ||
+            if (input.Contains(delimiter.ToString()) ||
+                input.Contains(quote.ToString()) ||
                 input.Contains(DEFAULT_QUOTE.ToString()))
             {
                 return quote.ToString();
