@@ -12,8 +12,12 @@ using System.Threading.Tasks;
 using System.Web;
 using Bytloos.Extensions;
 
+using static Bytloos.Web.HTTPContentTypes;
+
 namespace Bytloos.Web
 {
+    
+
     /// <summary>
     /// Simple HTTP client.
     /// </summary>
@@ -50,7 +54,6 @@ namespace Bytloos.Web
 
         private readonly Stopwatch stopWatch;
         private readonly HttpWebRequest defaultRequest;
-        private readonly List<Exception> exceptions;
 
         private WebProxy currentProxy;
 
@@ -61,24 +64,20 @@ namespace Bytloos.Web
         {
             SSLValidator.OverrideValidation();
 
-            this.stopWatch = new Stopwatch();
-            this.exceptions = new List<Exception>();
+            stopWatch = new Stopwatch();
+            Exceptions = new List<Exception>();
 
-            this.defaultRequest = (HttpWebRequest)WebRequest.CreateDefault(new Uri(DEFAULT_URL));
+            defaultRequest = (HttpWebRequest)WebRequest.CreateDefault(new Uri(DEFAULT_URL));
 
-            #region Default request initializing
+            defaultRequest.UserAgent = DEFAULT_USER_AGENT;
+            defaultRequest.Accept = DEFAULT_ACCEPT;
 
-            this.defaultRequest.UserAgent = DEFAULT_USER_AGENT;
-            this.defaultRequest.Accept = DEFAULT_ACCEPT;
-
-            this.defaultRequest.Headers.Add(
+            defaultRequest.Headers.Add(
                 HttpRequestHeader.AcceptLanguage,
                 string.Format(
                     "{0},{1};q=0.9,en;q=0.8",
                     CultureInfo.CurrentCulture.Name,
                     CultureInfo.CurrentCulture.TwoLetterISOLanguageName));
-            
-            #endregion
 
             Cookies = new CookieContainer();
         }
@@ -106,7 +105,7 @@ namespace Bytloos.Web
         /// <summary>
         /// Duration of last request and response.
         /// </summary>
-        public long Duration { get { return this.stopWatch.ElapsedMilliseconds; } }
+        public long Duration { get { return stopWatch.ElapsedMilliseconds; } }
 
         /// <summary>
         /// Current referer.
@@ -136,8 +135,9 @@ namespace Bytloos.Web
         /// <summary>
         /// List of occured exceptions.
         /// </summary>
-        public List<Exception> Exceptions { get { return this.exceptions; } }
+        public List<Exception> Exceptions { get; }
 
+        /// <inheritdoc />
         /// <summary>
         /// Makes memberwise clone of object.
         /// </summary>
@@ -160,7 +160,7 @@ namespace Bytloos.Web
             if (!SilentMode && CurrentProxyIndex == 0)
                 throw new IndexOutOfRangeException();
 
-            this.currentProxy = Proxies[CurrentProxyIndex];
+            currentProxy = Proxies[CurrentProxyIndex];
         }
 
         /// <summary>
@@ -217,11 +217,9 @@ namespace Bytloos.Web
             }
             catch (Exception exception)
             {
-                this.exceptions.Add(exception);
+                Exceptions.Add(exception);
 
-                string content;
-
-                if (TryHandleWebException(exception, encoding, out content))
+                if (TryHandleWebException(exception, encoding, out var content))
                     return content;
 
                 if (ProxyAutoswitching)
@@ -284,11 +282,9 @@ namespace Bytloos.Web
             }
             catch (Exception exception)
             {
-                this.exceptions.Add(exception);
+                Exceptions.Add(exception);
 
-                string content;
-
-                if (TryHandleWebException(exception, encoding, out content))
+                if (TryHandleWebException(exception, encoding, out var content))
                     return content;
 
                 if (ProxyAutoswitching)
@@ -355,11 +351,9 @@ namespace Bytloos.Web
             }
             catch (Exception exception)
             {
-                this.exceptions.Add(exception);
+                Exceptions.Add(exception);
 
-                string content;
-
-                if (TryHandleWebException(exception, encoding, out content))
+                if (TryHandleWebException(exception, encoding, out var content))
                     return content;
 
                 if (ProxyAutoswitching)
@@ -462,21 +456,24 @@ namespace Bytloos.Web
             var parameters = new Dictionary<string, string>();
 
             foreach (var keyVal in queryString.Split('&'))
+            {
                 parameters.Add(
                     keyVal.Split('=')[0].Trim(),
                     keyVal.Split('=')[1].Trim());
+            }
 
             return BuildQuery(parameters);
         }
 
         private static string BuildQuery(Dictionary<string, string> parameters)
         {
-            return parameters != null
-                ? parameters.Aggregate(
+            if (parameters == null)
+                return string.Empty;
+
+            return parameters.Aggregate(
                     string.Empty,
-                    (current, parameter) =>
-                        current + (parameter.Key + "=" + HttpUtility.UrlEncode(parameter.Value) + "&")).TrimEnd('&')
-                : string.Empty;
+                    (current, parameter) => current + parameter.Key + "=" + HttpUtility.UrlEncode(parameter.Value) + "&")
+                .TrimEnd('&');
         }
 
         private static string BuildMultipartQuery(Dictionary<string, string> parameters, string boundary, Dictionary<string, string> files = null)
@@ -484,11 +481,8 @@ namespace Bytloos.Web
             var data = "\r\n";
 
             foreach (var parameter in parameters)
-                data += string.Format(
-                    "--{0}\r\nContent-Disposition: form-data; name=\"{1}\"\r\n\r\n{2}\r\n",
-                    boundary,
-                    parameter.Key,
-                    parameter.Value);
+                data += $"--{boundary}\r\nContent-Disposition: form-data; " +
+                        $"name=\"{parameter.Key}\"\r\n\r\n{parameter.Value}\r\n";
 
             if (files != null)
             {
@@ -500,18 +494,13 @@ namespace Bytloos.Web
                         using (var sr = new StreamReader(fieldPathPair.Value, Encoding.Default))
                             content = sr.ReadToEnd();
 
-                    data
-                        += string.Format(
-                            "--{0}\r\nContent-Disposition: form-data; name=\"{1}\"; filename=\"{2}\"\r\nContent-Type: {3}\r\n\r\n{4}\r\n",
-                            boundary,
-                            fieldPathPair.Key,
-                            Path.GetFileName(fieldPathPair.Value),
-                            GetMultipartFileContentType(fieldPathPair.Value),
-                            content);
+                    data += $"--{boundary}\r\nContent-Disposition: form-data; name=\"{fieldPathPair.Key}\"; " +
+                            $"filename=\"{Path.GetFileName(fieldPathPair.Value)}\"\r\n" +
+                            $"Content-Type: {GetMultipartFileContentType(fieldPathPair.Value)}\r\n\r\n{content}\r\n";
                 }
             }
 
-            data += (boundary + "--\r\n\r\n");
+            data += $"{boundary}--\r\n\r\n";
 
             return data;
         }
@@ -519,216 +508,14 @@ namespace Bytloos.Web
         private static string GetMultipartFileContentType(string file)
         {
             var extension = file.Split('.').LastOrDefault() ?? "*";
-
-            #region Initializing content types 
-
-            var typesDict = new Dictionary<string, string>
-            {
-                { "*", "application/octet-stream" },
-                { "323", "text/h323" },
-                { "acx", "application/internet-property-stream" },
-                { "ai", "application/postscript" },
-                { "aif", "audio/x-aiff" },
-                { "aifc", "audio/x-aiff" },
-                { "aiff", "audio/x-aiff" },
-                { "asf", "video/x-ms-asf" },
-                { "asr", "video/x-ms-asf" },
-                { "asx", "video/x-ms-asf" },
-                { "au", "audio/basic" },
-                { "avi", "video/x-msvideo" },
-                { "axs", "application/olescript" },
-                { "bas", "text/plain" },
-                { "bcpio", "application/x-bcpio" },
-                { "bin", "application/octet-stream" },
-                { "bmp", "image/bmp" },
-                { "c", "text/plain" },
-                { "cat", "application/vnd.ms-pkiseccat" },
-                { "cdf", "application/x-cdf" },
-                { "cer", "application/x-x509-ca-cert" },
-                { "class", "application/octet-stream" },
-                { "clp", "application/x-msclip" },
-                { "cmx", "image/x-cmx" },
-                { "cod", "image/cis-cod" },
-                { "cpio", "application/x-cpio" },
-                { "crd", "application/x-mscardfile" },
-                { "crl", "application/pkix-crl" },
-                { "crt", "application/x-x509-ca-cert" },
-                { "csh", "application/x-csh" },
-                { "css", "text/css" },
-                { "dcr", "application/x-director" },
-                { "der", "application/x-x509-ca-cert" },
-                { "dir", "application/x-director" },
-                { "dll", "application/x-msdownload" },
-                { "dms", "application/octet-stream" },
-                { "doc", "application/msword" },
-                { "dot", "application/msword" },
-                { "dvi", "application/x-dvi" },
-                { "dxr", "application/x-director" },
-                { "eps", "application/postscript" },
-                { "etx", "text/x-setext" },
-                { "evy", "application/envoy" },
-                { "exe", "application/octet-stream" },
-                { "fif", "application/fractals" },
-                { "flr", "x-world/x-vrml" },
-                { "gif", "image/gif" },
-                { "gtar", "application/x-gtar" },
-                { "gz", "application/x-gzip" },
-                { "h", "text/plain" },
-                { "hdf", "application/x-hdf" },
-                { "hlp", "application/winhlp" },
-                { "hqx", "application/mac-binhex40" },
-                { "hta", "application/hta" },
-                { "htc", "text/x-component" },
-                { "htm", "text/html" },
-                { "html", "text/html" },
-                { "htt", "text/webviewhtml" },
-                { "ico", "image/x-icon" },
-                { "ief", "image/ief" },
-                { "iii", "application/x-iphone" },
-                { "ins", "application/x-internet-signup" },
-                { "isp", "application/x-internet-signup" },
-                { "jfif", "image/pipeg" },
-                { "jpe", "image/jpeg" },
-                { "jpeg", "image/jpeg" },
-                { "jpg", "image/jpeg" },
-                { "js", "application/x-javascript" },
-                { "latex", "application/x-latex" },
-                { "lha", "application/octet-stream" },
-                { "lsf", "video/x-la-asf" },
-                { "lsx", "video/x-la-asf" },
-                { "lzh", "application/octet-stream" },
-                { "m13", "application/x-msmediaview" },
-                { "m14", "application/x-msmediaview" },
-                { "m3u", "audio/x-mpegurl" },
-                { "man", "application/x-troff-man" },
-                { "mdb", "application/x-msaccess" },
-                { "me", "application/x-troff-me" },
-                { "mht", "message/rfc822" },
-                { "mhtml", "message/rfc822" },
-                { "mid", "audio/mid" },
-                { "mny", "application/x-msmoney" },
-                { "mov", "video/quicktime" },
-                { "movie", "video/x-sgi-movie" },
-                { "mp2", "video/mpeg" },
-                { "mp3", "audio/mpeg" },
-                { "mpa", "video/mpeg" },
-                { "mpe", "video/mpeg" },
-                { "mpeg", "video/mpeg" },
-                { "mpg", "video/mpeg" },
-                { "mpp", "application/vnd.ms-project" },
-                { "mpv2", "video/mpeg" },
-                { "ms", "application/x-troff-ms" },
-                { "msg", "application/vnd.ms-outlook" },
-                { "mvb", "application/x-msmediaview" },
-                { "nc", "application/x-netcdf" },
-                { "nws", "message/rfc822" },
-                { "oda", "application/oda" },
-                { "p10", "application/pkcs10" },
-                { "p12", "application/x-pkcs12" },
-                { "p7b", "application/x-pkcs7-certificates" },
-                { "p7c", "application/x-pkcs7-mime" },
-                { "p7m", "application/x-pkcs7-mime" },
-                { "p7r", "application/x-pkcs7-certreqresp" },
-                { "p7s", "application/x-pkcs7-signature" },
-                { "pbm", "image/x-portable-bitmap" },
-                { "pdf", "application/pdf" },
-                { "pfx", "application/x-pkcs12" },
-                { "pgm", "image/x-portable-graymap" },
-                { "pko", "application/ynd.ms-pkipko" },
-                { "pma", "application/x-perfmon" },
-                { "pmc", "application/x-perfmon" },
-                { "pml", "application/x-perfmon" },
-                { "pmr", "application/x-perfmon" },
-                { "pmw", "application/x-perfmon" },
-                { "pnm", "image/x-portable-anymap" },
-                { "pot", "application/vnd.ms-powerpoint" },
-                { "ppm", "image/x-portable-pixmap" },
-                { "pps", "application/vnd.ms-powerpoint" },
-                { "ppt", "application/vnd.ms-powerpoint" },
-                { "prf", "application/pics-rules" },
-                { "ps", "application/postscript" },
-                { "pub", "application/x-mspublisher" },
-                { "qt", "video/quicktime" },
-                { "ra", "audio/x-pn-realaudio" },
-                { "ram", "audio/x-pn-realaudio" },
-                { "ras", "image/x-cmu-raster" },
-                { "rgb", "image/x-rgb" },
-                { "rmi", "audio/mid" },
-                { "roff", "application/x-troff" },
-                { "rtf", "application/rtf" },
-                { "rtx", "text/richtext" },
-                { "scd", "application/x-msschedule" },
-                { "sct", "text/scriptlet" },
-                { "setpay", "application/set-payment-initiation" },
-                { "setreg", "application/set-registration-initiation" },
-                { "sh", "application/x-sh" },
-                { "shar", "application/x-shar" },
-                { "sit", "application/x-stuffit" },
-                { "snd", "audio/basic" },
-                { "spc", "application/x-pkcs7-certificates" },
-                { "spl", "application/futuresplash" },
-                { "src", "application/x-wais-source" },
-                { "sst", "application/vnd.ms-pkicertstore" },
-                { "stl", "application/vnd.ms-pkistl" },
-                { "stm", "text/html" },
-                { "sv4cpio", "application/x-sv4cpio" },
-                { "sv4crc", "application/x-sv4crc" },
-                { "svg", "image/svg+xml" },
-                { "swf", "application/x-shockwave-flash" },
-                { "t", "application/x-troff" },
-                { "tar", "application/x-tar" },
-                { "tcl", "application/x-tcl" },
-                { "tex", "application/x-tex" },
-                { "texi", "application/x-texinfo" },
-                { "texinfo", "application/x-texinfo" },
-                { "tgz", "application/x-compressed" },
-                { "tif", "image/tiff" },
-                { "tiff", "image/tiff" },
-                { "tr", "application/x-troff" },
-                { "trm", "application/x-msterminal" },
-                { "tsv", "text/tab-separated-values" },
-                { "txt", "text/plain" },
-                { "uls", "text/iuls" },
-                { "ustar", "application/x-ustar" },
-                { "vcf", "text/x-vcard" },
-                { "vrml", "x-world/x-vrml" },
-                { "wav", "audio/x-wav" },
-                { "wcm", "application/vnd.ms-works" },
-                { "wdb", "application/vnd.ms-works" },
-                { "wks", "application/vnd.ms-works" },
-                { "wmf", "application/x-msmetafile" },
-                { "wps", "application/vnd.ms-works" },
-                { "wri", "application/x-mswrite" },
-                { "wrl", "x-world/x-vrml" },
-                { "wrz", "x-world/x-vrml" },
-                { "xaf", "x-world/x-vrml" },
-                { "xbm", "image/x-xbitmap" },
-                { "xla", "application/vnd.ms-excel" },
-                { "xlc", "application/vnd.ms-excel" },
-                { "xlm", "application/vnd.ms-excel" },
-                { "xls", "application/vnd.ms-excel" },
-                { "xlt", "application/vnd.ms-excel" },
-                { "xlw", "application/vnd.ms-excel" },
-                { "xof", "x-world/x-vrml" },
-                { "xpm", "image/x-xpixmap" },
-                { "xwd", "image/x-xwindowdump" },
-                { "z", "application/x-compress" },
-                { "zip", "application/zip" }
-            };
-
-            #endregion
-
-            string result;
-
-            typesDict.TryGetValue(extension.ToLower(), out result);
-
+            contentTypes.TryGetValue(extension.ToLower(), out var result);
             return result ?? "application/octet-stream";
         }
 
         private void BeginWatching()
         {
-            this.stopWatch.Reset();
-            this.stopWatch.Start();
+            stopWatch.Reset();
+            stopWatch.Start();
 
             if (Delay > 0)
                 Thread.Sleep(Delay);
@@ -738,7 +525,7 @@ namespace Bytloos.Web
         {
             var request = (HttpWebRequest)WebRequest.Create(url);
 
-            request.Proxy = this.currentProxy ?? request.Proxy;
+            request.Proxy = currentProxy ?? request.Proxy;
 
             headers = headers ?? Headers;
             options = options ?? Options;
@@ -764,12 +551,10 @@ namespace Bytloos.Web
                         case HTTPHeaderKey.ContentLength:   request.ContentLength = long.Parse(header.Value);
                             break;
                         case HTTPHeaderKey.Connection:
-
                             if (header.Value != "keep-alive" && header.Value != "close")
                                 request.Connection = header.Value;
                             else
                                 request.KeepAlive = header.Value == "keep-alive";
-
                             break;
                     }
                 }
@@ -783,13 +568,11 @@ namespace Bytloos.Web
                 request.Proxy = options.Proxy;
             }
 
-            request.Accept = request.Accept ?? this.defaultRequest.Accept;
-            request.UserAgent = request.UserAgent ?? this.defaultRequest.UserAgent;
+            request.Accept = request.Accept ?? defaultRequest.Accept;
+            request.UserAgent = request.UserAgent ?? defaultRequest.UserAgent;
 
             if (string.IsNullOrEmpty(request.Headers[HttpRequestHeader.AcceptLanguage]))
-                request.Headers.Add(
-                    header: HttpRequestHeader.AcceptLanguage,
-                    value:  this.defaultRequest.Headers[HttpRequestHeader.AcceptLanguage]);
+                request.Headers.Add(HttpRequestHeader.AcceptLanguage, defaultRequest.Headers[HttpRequestHeader.AcceptLanguage]);
 
             request.Referer = request.Referer ?? Referer;
 
@@ -837,7 +620,7 @@ namespace Bytloos.Web
             memoryStream.Close();
             response.Close();
 
-            this.stopWatch.Stop();
+            stopWatch.Stop();
 
             Referer = request.RequestUri.AbsoluteUri;
 
@@ -859,15 +642,14 @@ namespace Bytloos.Web
             if (!SilentMode)
                 return false;
 
-            var webException = exception as WebException;
-
-            if (webException != null)
+            if (exception is WebException webException)
             {
                 var response = webException.Response;
+                var responseStream = response.GetResponseStream() ?? throw new InvalidOperationException();
 
                 encoding = DetectEncoding(encoding, (HttpWebResponse)response);
 
-                using (var sr = new StreamReader(response.GetResponseStream(), encoding))
+                using (var sr = new StreamReader(responseStream, encoding))
                     content = sr.ReadToEnd();
 
                 return true;

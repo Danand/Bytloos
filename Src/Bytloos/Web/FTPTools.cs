@@ -37,7 +37,8 @@ namespace Bytloos.Web
             this.host = !this.host.Contains(PROTOCOL) ? PROTOCOL + this.host : this.host;
             this.username = username;
             this.password = password;
-            this.exceptions = new List<Exception>();
+
+            exceptions = new List<Exception>();
         }
 
         /// <summary>
@@ -57,47 +58,48 @@ namespace Bytloos.Web
         {
             try
             {
-                this.request = (FtpWebRequest)WebRequest.Create(string.Format("{0}/{1}", host, remoteFilePath));
+                request = (FtpWebRequest)WebRequest.Create($"{host}/{remoteFilePath}");
 
-                this.request.Credentials = new NetworkCredential(username, password);
-                this.request.UseBinary = true;
-                this.request.UsePassive = true;
-                this.request.KeepAlive = true;
-                this.request.Method = WebRequestMethods.Ftp.DownloadFile;
+                request.Credentials = new NetworkCredential(username, password);
+                request.UseBinary = true;
+                request.UsePassive = true;
+                request.KeepAlive = true;
+                request.Method = WebRequestMethods.Ftp.DownloadFile;
 
-                this.response = (FtpWebResponse)this.request.GetResponse();
+                response = (FtpWebResponse)request.GetResponse();
 
-                this.stream = this.response.GetResponseStream();
+                stream = response.GetResponseStream();
 
-                if (this.stream == null)
+                if (stream == null)
                     throw new NullReferenceException("Response stream is null.");
 
                 var localFileStream = new FileStream(localFilePath, FileMode.Create);
                 var byteBuffer = new byte[BUFFER_SIZE];
-                var bytesRead = this.stream.Read(byteBuffer, 0, BUFFER_SIZE);
+                var bytesRead = stream.Read(byteBuffer, 0, BUFFER_SIZE);
 
                 try
                 {
                     while (bytesRead > 0)
                     {
                         localFileStream.Write(byteBuffer, 0, bytesRead);
-                        bytesRead = this.stream.Read(byteBuffer, 0, BUFFER_SIZE);
+                        bytesRead = stream.Read(byteBuffer, 0, BUFFER_SIZE);
                     }
                 }
                 catch (Exception xcptn)
                 {
-                    this.exceptions.Add(xcptn);
+                    exceptions.Add(xcptn);
                 }
 
                 localFileStream.Close();
 
-                this.stream.Close();
-                this.response.Close();
-                this.request = null;
+                stream.Close();
+                response.Close();
+
+                request = null;
             }
             catch (Exception exception)
             {
-                this.exceptions.Add(exception);
+                exceptions.Add(exception);
             }
         }
 
@@ -110,15 +112,15 @@ namespace Bytloos.Web
         {
             try
             {
-                this.request = (FtpWebRequest)WebRequest.Create(string.Format("{0}/{1}", host, remoteFilePath));
+                request = (FtpWebRequest)WebRequest.Create($"{host}/{remoteFilePath}");
 
-                this.request.Credentials = new NetworkCredential(username, password);
-                this.request.UseBinary = true;
-                this.request.UsePassive = true;
-                this.request.KeepAlive = true;
-                this.request.Method = WebRequestMethods.Ftp.UploadFile;
+                request.Credentials = new NetworkCredential(username, password);
+                request.UseBinary = true;
+                request.UsePassive = true;
+                request.KeepAlive = true;
+                request.Method = WebRequestMethods.Ftp.UploadFile;
 
-                this.stream = this.request.GetRequestStream();
+                stream = request.GetRequestStream();
 
                 var localFileStream = new FileStream(localFilePath, FileMode.Create);
                 var byteBuffer = new byte[BUFFER_SIZE];
@@ -128,23 +130,24 @@ namespace Bytloos.Web
                 {
                     while (bytesSent != 0)
                     {
-                        this.stream.Write(byteBuffer, 0, bytesSent);
+                        stream.Write(byteBuffer, 0, bytesSent);
                         bytesSent = localFileStream.Read(byteBuffer, 0, BUFFER_SIZE);
                     }
                 }
                 catch (Exception xcptn)
                 {
-                    this.exceptions.Add(xcptn);
+                    exceptions.Add(xcptn);
                 }
 
                 localFileStream.Close();
 
-                this.stream.Close();
-                this.request = null;
+                stream.Close();
+
+                request = null;
             }
             catch (Exception exception)
             {
-                this.exceptions.Add(exception);
+                exceptions.Add(exception);
             }
         }
 
@@ -156,22 +159,23 @@ namespace Bytloos.Web
         {
             try
             {
-                this.request = (FtpWebRequest)WebRequest.Create(string.Format("{0}/{1}", host, remoteFilePath));
+                request = (FtpWebRequest)WebRequest.Create($"{host}/{remoteFilePath}");
 
-                this.request.Credentials = new NetworkCredential(username, password);
-                this.request.UseBinary = true;
-                this.request.UsePassive = true;
-                this.request.KeepAlive = true;
-                this.request.Method = WebRequestMethods.Ftp.DeleteFile;
+                request.Credentials = new NetworkCredential(username, password);
+                request.UseBinary = true;
+                request.UsePassive = true;
+                request.KeepAlive = true;
+                request.Method = WebRequestMethods.Ftp.DeleteFile;
 
-                this.response = (FtpWebResponse)this.request.GetResponse();
+                response = (FtpWebResponse)request.GetResponse();
 
-                this.response.Close();
-                this.request = null;
+                response.Close();
+
+                request = null;
             }
             catch (Exception exception)
             {
-                this.exceptions.Add(exception);
+                exceptions.Add(exception);
             }
         }
 
@@ -184,24 +188,24 @@ namespace Bytloos.Web
         {
             try
             {
-                this.request = (FtpWebRequest)WebRequest.Create(string.Format("{0}/{1}", host, currentFilePath));
+                request = (FtpWebRequest)WebRequest.Create($"{host}/{currentFilePath}");
 
-                this.request.Credentials = new NetworkCredential(username, password);
-                this.request.UseBinary = true;
-                this.request.UsePassive = true;
-                this.request.KeepAlive = true;
-                this.request.Method = WebRequestMethods.Ftp.Rename;
-                this.request.RenameTo = newFileName;
+                request.Credentials = new NetworkCredential(username, password);
+                request.UseBinary = true;
+                request.UsePassive = true;
+                request.KeepAlive = true;
+                request.Method = WebRequestMethods.Ftp.Rename;
+                request.RenameTo = newFileName;
 
-                this.response = (FtpWebResponse)this.request.GetResponse();
+                response = (FtpWebResponse)request.GetResponse();
 
-                this.response.Close();
+                response.Close();
 
-                this.request = null;
+                request = null;
             }
             catch (Exception exception)
             {
-                this.exceptions.Add(exception);
+                exceptions.Add(exception);
             }
         }
 
@@ -213,23 +217,23 @@ namespace Bytloos.Web
         {
             try
             {
-                this.request = (FtpWebRequest)WebRequest.Create(string.Format("{0}/{1}", host, relativePath));
+                request = (FtpWebRequest)WebRequest.Create($"{host}/{relativePath}");
 
-                this.request.Credentials = new NetworkCredential(username, password);
-                this.request.UseBinary = true;
-                this.request.UsePassive = true;
-                this.request.KeepAlive = true;
-                this.request.Method = WebRequestMethods.Ftp.MakeDirectory;
+                request.Credentials = new NetworkCredential(username, password);
+                request.UseBinary = true;
+                request.UsePassive = true;
+                request.KeepAlive = true;
+                request.Method = WebRequestMethods.Ftp.MakeDirectory;
 
-                this.response = (FtpWebResponse)this.request.GetResponse();
+                response = (FtpWebResponse)request.GetResponse();
 
-                this.response.Close();
+                response.Close();
 
-                this.request = null;
+                request = null;
             }
             catch (Exception exception)
             {
-                this.exceptions.Add(exception);
+                exceptions.Add(exception);
             }
         }
 
@@ -242,22 +246,22 @@ namespace Bytloos.Web
         {
             try
             {
-                this.request = (FtpWebRequest)WebRequest.Create(string.Format("{0}/{1}", host, filePath));
+                request = (FtpWebRequest)WebRequest.Create($"{host}/{filePath}");
 
-                this.request.Credentials = new NetworkCredential(username, password);
-                this.request.UseBinary = true;
-                this.request.UsePassive = true;
-                this.request.KeepAlive = true;
-                this.request.Method = WebRequestMethods.Ftp.GetDateTimestamp;
+                request.Credentials = new NetworkCredential(username, password);
+                request.UseBinary = true;
+                request.UsePassive = true;
+                request.KeepAlive = true;
+                request.Method = WebRequestMethods.Ftp.GetDateTimestamp;
 
-                this.response = (FtpWebResponse)this.request.GetResponse();
+                response = (FtpWebResponse)request.GetResponse();
 
-                this.stream = this.response.GetResponseStream();
+                stream = response.GetResponseStream();
 
-                if (this.stream == null)
+                if (stream == null)
                     throw new NullReferenceException("Response stream is null.");
 
-                var ftpReader = new StreamReader(this.stream);
+                var ftpReader = new StreamReader(stream);
 
                 string fileInfo = null;
 
@@ -267,20 +271,20 @@ namespace Bytloos.Web
                 }
                 catch (Exception xcptn)
                 {
-                    this.exceptions.Add(xcptn);
+                    exceptions.Add(xcptn);
                 }
 
                 ftpReader.Close();
+                stream.Close();
+                response.Close();
 
-                this.stream.Close();
-                this.response.Close();
-                this.request = null;
+                request = null;
 
                 return fileInfo;
             }
             catch (Exception exception)
             {
-                this.exceptions.Add(exception);
+                exceptions.Add(exception);
             }
 
             return null;
@@ -295,22 +299,22 @@ namespace Bytloos.Web
         {
             try
             {
-                this.request = (FtpWebRequest)WebRequest.Create(string.Format("{0}/{1}", host, filePath));
+                request = (FtpWebRequest)WebRequest.Create($"{host}/{filePath}");
 
-                this.request.Credentials = new NetworkCredential(username, password);
-                this.request.UseBinary = true;
-                this.request.UsePassive = true;
-                this.request.KeepAlive = true;
-                this.request.Method = WebRequestMethods.Ftp.GetFileSize;
+                request.Credentials = new NetworkCredential(username, password);
+                request.UseBinary = true;
+                request.UsePassive = true;
+                request.KeepAlive = true;
+                request.Method = WebRequestMethods.Ftp.GetFileSize;
 
-                this.response = (FtpWebResponse)this.request.GetResponse();
+                response = (FtpWebResponse)request.GetResponse();
 
-                this.stream = this.response.GetResponseStream();
+                stream = response.GetResponseStream();
 
-                if (this.stream == null)
+                if (stream == null)
                     throw new NullReferenceException("Response stream is null.");
 
-                var ftpReader = new StreamReader(this.stream);
+                var ftpReader = new StreamReader(stream);
                 string fileInfo = null;
 
                 try
@@ -320,20 +324,20 @@ namespace Bytloos.Web
                 }
                 catch (Exception xcptn)
                 {
-                    this.exceptions.Add(xcptn);
+                    exceptions.Add(xcptn);
                 }
 
                 ftpReader.Close();
+                stream.Close();
+                response.Close();
 
-                this.stream.Close();
-                this.response.Close();
-                this.request = null;
+                request = null;
 
                 return fileInfo;
             }
             catch (Exception exception)
             {
-                this.exceptions.Add(exception);
+                exceptions.Add(exception);
             }
 
             return null;
@@ -348,10 +352,14 @@ namespace Bytloos.Web
         /// <param name="exclusivePattern">Get only mismatched elements.</param>
         /// <param name="strongMatch">Strong match.</param>
         /// <returns>List of subdirectories.</returns>
-        public string[] ListDirectory(string directory, bool recursive = false, string inclusivePattern = null, string exclusivePattern = null, bool strongMatch = false)
+        public string[] ListDirectory(
+            string  directory,
+            bool    recursive           = false,
+            string  inclusivePattern    = null,
+            string  exclusivePattern    = null,
+            bool    strongMatch         = false)
         {
             var list = ListContents(directory, recursive, inclusivePattern, exclusivePattern, strongMatch);
-
             return list.Where(cl => !Regex.IsMatch(cl, @".+\.[^\,]+$")).ToArray();
         }
 
@@ -364,10 +372,14 @@ namespace Bytloos.Web
         /// <param name="exclusivePattern">Get only mismatched elements.</param>
         /// <param name="strongMatch">Strong match.</param>
         /// <returns>List of files.</returns>
-        public string[] ListFiles(string directory, bool recursive = false, string inclusivePattern = null, string exclusivePattern = null, bool strongMatch = false)
+        public string[] ListFiles(
+            string  directory,
+            bool    recursive           = false,
+            string  inclusivePattern    = null,
+            string  exclusivePattern    = null,
+            bool    strongMatch         = false)
         {
             var list = ListContents(directory, recursive, inclusivePattern, exclusivePattern, strongMatch);
-
             return list.Where(cl => Regex.IsMatch(cl, @".+\.[^\,]+$")).ToArray();
         }
 
@@ -380,33 +392,36 @@ namespace Bytloos.Web
         /// <param name="exclusivePattern">Get only mismatched elements.</param>
         /// <param name="strongMatch">Strong match.</param>
         /// <returns>Content of remote directory.</returns>
-        public string[] ListContents(string directory, bool recursive = false, string inclusivePattern = null, string exclusivePattern = null, bool strongMatch = false)
+        public string[] ListContents(
+            string  directory,
+            bool    recursive           = false,
+            string  inclusivePattern    = null,
+            string  exclusivePattern    = null,
+            bool    strongMatch         = false)
         {
             var directoryParts = directory.Split('/');
-
             var upperLevels = string.Join("/", directoryParts.Take(directoryParts.Length > 1 ? directoryParts.Length - 1 : 1));
-
             var list = new List<string>();
 
             try
             {
-                this.request = (FtpWebRequest)WebRequest.Create(string.Format("{0}/{1}", host, directory));
+                request = (FtpWebRequest)WebRequest.Create($"{host}/{directory}");
 
-                this.request.Credentials = new NetworkCredential(username, password);
+                request.Credentials = new NetworkCredential(username, password);
 
-                this.request.UseBinary = true;
-                this.request.UsePassive = true;
-                this.request.KeepAlive = true;
-                this.request.Method = WebRequestMethods.Ftp.ListDirectory;
+                request.UseBinary = true;
+                request.UsePassive = true;
+                request.KeepAlive = true;
+                request.Method = WebRequestMethods.Ftp.ListDirectory;
 
-                this.response = (FtpWebResponse)this.request.GetResponse();
+                response = (FtpWebResponse)request.GetResponse();
 
-                this.stream = this.response.GetResponseStream();
+                stream = response.GetResponseStream();
 
-                if (this.stream == null)
+                if (stream == null)
                     throw new NullReferenceException("Response stream is null.");
 
-                var ftpReader = new StreamReader(this.stream);
+                var ftpReader = new StreamReader(stream);
 
                 var directoryRaw = string.Empty;
 
@@ -417,19 +432,18 @@ namespace Bytloos.Web
                 }
                 catch (Exception xcptn)
                 {
-                    this.exceptions.Add(xcptn);
+                    exceptions.Add(xcptn);
                 }
 
                 ftpReader.Close();
+                stream.Close();
+                response.Close();
 
-                this.stream.Close();
-                this.response.Close();
-                this.request = null;
+                request = null;
 
                 try
                 {
-                    var contentLines =
-                        directoryRaw.Split("|".ToCharArray()).Select(e => upperLevels + "/" + e).ToArray();
+                    var contentLines = directoryRaw.Split("|".ToCharArray()).Select(e => upperLevels + "/" + e).ToArray();
 
                     contentLines = contentLines.Take(contentLines.Length > 1 ? contentLines.Length - 1 : 1).ToArray();
 
@@ -466,12 +480,12 @@ namespace Bytloos.Web
                 }
                 catch (Exception xcptn)
                 {
-                    this.exceptions.Add(xcptn);
+                    exceptions.Add(xcptn);
                 }
             }
             catch (Exception exception)
             {
-                this.exceptions.Add(exception);
+                exceptions.Add(exception);
             }
 
             return null;
@@ -486,22 +500,22 @@ namespace Bytloos.Web
         {
             try
             {
-                this.request = (FtpWebRequest)WebRequest.Create(string.Format("{0}/{1}", host, directoryPath));
+                request = (FtpWebRequest)WebRequest.Create($"{host}/{directoryPath}");
 
-                this.request.Credentials = new NetworkCredential(username, password);
-                this.request.UseBinary = true;
-                this.request.UsePassive = true;
-                this.request.KeepAlive = true;
-                this.request.Method = WebRequestMethods.Ftp.ListDirectoryDetails;
+                request.Credentials = new NetworkCredential(username, password);
+                request.UseBinary = true;
+                request.UsePassive = true;
+                request.KeepAlive = true;
+                request.Method = WebRequestMethods.Ftp.ListDirectoryDetails;
 
-                this.response = (FtpWebResponse)this.request.GetResponse();
+                response = (FtpWebResponse)request.GetResponse();
 
-                this.stream = this.response.GetResponseStream();
+                stream = response.GetResponseStream();
 
-                if (this.stream == null)
+                if (stream == null)
                     throw new NullReferenceException("Response stream is null.");
 
-                var ftpReader = new StreamReader(this.stream);
+                var ftpReader = new StreamReader(stream);
                 var directoryRaw = string.Empty;
 
                 try
@@ -511,14 +525,14 @@ namespace Bytloos.Web
                 }
                 catch (Exception xcptn)
                 {
-                    this.exceptions.Add(xcptn);
+                    exceptions.Add(xcptn);
                 }
 
                 ftpReader.Close();
+                stream.Close();
+                response.Close();
 
-                this.stream.Close();
-                this.response.Close();
-                this.request = null;
+                request = null;
 
                 try
                 {
@@ -527,12 +541,12 @@ namespace Bytloos.Web
                 }
                 catch (Exception xcptn)
                 {
-                    this.exceptions.Add(xcptn);
+                    exceptions.Add(xcptn);
                 }
             }
             catch (Exception exception)
             {
-                this.exceptions.Add(exception);
+                exceptions.Add(exception);
             }
 
             return null;

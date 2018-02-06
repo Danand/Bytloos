@@ -31,9 +31,7 @@ namespace Bytloos.Extensions
             }
             catch (WebException exception)
             {
-                var response = exception.Response as HttpWebResponse;
-
-                if (response == null)
+                if (!(exception.Response is HttpWebResponse response))
                     throw;
 
                 return response;

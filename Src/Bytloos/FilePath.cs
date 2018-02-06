@@ -3,7 +3,7 @@
 namespace Bytloos
 {
     /// <summary>
-    /// Static class to work with paths.
+    /// Static class for working with paths.
     /// </summary>
     public static class FilePath
     {

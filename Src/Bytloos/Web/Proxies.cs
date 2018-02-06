@@ -34,17 +34,18 @@ namespace Bytloos.Web
                     if (string.IsNullOrWhiteSpace(line))
                         continue;
 
-                    var lineArr = line.Split(';', ',', '\t');
+                    var lineSplitted = line.Split(';', ',', '\t');
 
-                    if (lineArr.Length == 1)
+                    if (lineSplitted.Length == 1)
                         list.Add(new WebProxy(line.Trim()));
 
-                    if (lineArr.Length == 3)
-                        list.Add(
-                            new WebProxy(lineArr[0].Trim())
-                            {
-                                Credentials = new NetworkCredential(lineArr[1].Trim(), lineArr[2].Trim())
-                            });
+                    if (lineSplitted.Length == 3)
+                    {
+                        list.Add(new WebProxy(lineSplitted[0].Trim())
+                        {
+                            Credentials = new NetworkCredential(lineSplitted[1].Trim(), lineSplitted[2].Trim())
+                        });
+                    }
                 }
             }
 
