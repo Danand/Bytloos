@@ -12,3 +12,6 @@ So there are some tools for more flexible bydlocoding development:
 * and some useful extension methods and utilities.
 
 Examples: coming soon.
+
+Bytloos .dll downloads:
+* [for >= .NET Framework 4.0 (full)](https://github.com/Danand/Bytloos/releases/download/3.0.1/Bytloos_v3.0.1.zip).
