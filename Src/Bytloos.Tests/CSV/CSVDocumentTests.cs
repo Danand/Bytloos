@@ -19,6 +19,7 @@ namespace Bytloos.Tests.CSV
         [TestCase("'qwe';'rty';'uio'", 1, 3)]
         [TestCase("\"qwe\";\"rty\";\"uio\"", 1, 3)]
         [TestCase("\"qw;e\";\"rt;y\";\"ui;o\"", 1, 3)]
+        [TestCase("\"q\"we\";\"r\"ty\";\"u\"io\"", 1, 3)]
         public void LoadFromString_Singleline(string text, int expectedRowCount, int expectedCellCount)
         {
             var csvDocument = CSVDocument.LoadFromString(text);
@@ -66,6 +67,7 @@ namespace Bytloos.Tests.CSV
         }
 
         [TestCase(50000, 10, 10, 35)]
+        [TestCase(25000, 40, 15, 20)]
         public void LoadFromFile_BigFile(int rowsAmount, int columnsAmount, int minCellLength, int maxCellLength)
         {
             var directory = Path.GetDirectoryName(new Uri(GetType().Assembly.CodeBase).LocalPath);
@@ -96,6 +98,7 @@ namespace Bytloos.Tests.CSV
         }
 
         [TestCase("123;456;789\r\nasd;fgh;jkl", 1, 1, "fgh")]
+        [TestCase("123;456;789\r\nasd;fgh;jkl", 0, 2, "789")]
         public void GetRowValue_ByIndex(string text, int rowIndex, int valueIndex, string expectedValue)
         {
             var csvDocument = CSVDocument.LoadFromString(text);
@@ -106,6 +109,7 @@ namespace Bytloos.Tests.CSV
         }
 
         [TestCase("123;456;789\r\nasd;fgh;jkl", "asd", 1, "fgh")]
+        [TestCase("123;456;789\r\nasd;fgh;jkl", "123", 2, "789")]
         public void GetRowValue_ByName(string text, string rowKey, int valueIndex, string expectedValue)
         {
             var csvDocument = CSVDocument.LoadFromString(text);
@@ -117,7 +121,7 @@ namespace Bytloos.Tests.CSV
 
         private string GetRandomString(int length)
         {
-            const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789;-+'";
+            const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789;-+'\"";
 
             return new string(Enumerable.Repeat(chars, length)
                 .Select(s => s[random.Next(s.Length)])
