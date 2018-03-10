@@ -1,12 +1,12 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace Bytloos.CSV
 {
-    /// <summary>
-    /// </summary>
-    public class Rows
+    /// <inheritdoc />
+    public class Rows : IEnumerable<IEnumerable<Cell>>
     {
         /// <summary>
         /// 
@@ -27,25 +27,57 @@ namespace Bytloos.CSV
         /// </summary>
         public int Count
         {
-            get { return cells.Max(cell => cell.Y); }
+            get
+            {
+                if (!cells.Any())
+                    return 0;
+
+                return cells.Max(cell => cell.Y) + 1;
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="index"></param>
+        public List<Cell> this[int index]
+        {
+            get
+            {
+                return cells.Where(cell => cell.Y == index).ToList();
+            }
         }
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="key"></param>
-        public Row this[string key]
+        public List<Cell> this[string key]
         {
             get
             {
                 var keyCells = GetKeyCells();
-                var keyCell = keyCells.FirstOrDefault();
+
+                var keyCell = keyCells.FirstOrDefault(cell => cell.Data == key);
 
                 if (keyCell == default(Cell))
                     throw new ArgumentOutOfRangeException(nameof(key));
 
                 return GetLine(keyCell);
             }
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            for (var i = 0; i < Count; i++)
+                yield return this[i];
+        }
+
+        /// <inheritdoc />
+        public IEnumerator<IEnumerable<Cell>> GetEnumerator()
+        {
+            for (var i = 0; i < Count; i++)
+                yield return this[i];
         }
 
         /// <summary>
@@ -62,9 +94,9 @@ namespace Bytloos.CSV
         /// </summary>
         /// <param name="keyCell"></param>
         /// <returns></returns>
-        protected Row GetLine(Cell keyCell)
+        protected List<Cell> GetLine(Cell keyCell)
         {
-            return (Row)cells.Where(cell => cell.Y == keyCell.Y).ToList();
+            return cells.Where(cell => cell.Y == keyCell.Y).ToList();
         }
     }
 }

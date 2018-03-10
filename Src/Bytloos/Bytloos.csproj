@@ -59,7 +59,7 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CSV\Row.cs" />
+    <Compile Include="CSV\CSVOptions.cs" />
     <Compile Include="CSV\Rows.cs" />
     <Compile Include="Extensions\CryptExtensions.cs" />
     <Compile Include="CSV\Cell.cs" />
