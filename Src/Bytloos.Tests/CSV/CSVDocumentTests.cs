@@ -10,7 +10,18 @@ namespace Bytloos.Tests.CSV
     [TestFixture]
     public class CSVDocumentTests
     {
+        private const string AVAILABLE_RANDOM_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789;-+'\"";
+
         private readonly Random random = new Random();
+
+        private string TestFilePath
+        {
+            get
+            {
+                var directory = Path.GetDirectoryName(new Uri(GetType().Assembly.CodeBase).LocalPath);
+                return $"{directory}\\{GetType().Name}.csv";
+            }
+        }
 
         [TestCase("", 0, 0)]
         [TestCase(" ", 1, 1)]
@@ -50,8 +61,7 @@ namespace Bytloos.Tests.CSV
         [TestCase("\"qw;e\";\"rt;y\";\"ui;o\"\r\n\"as;d\";\"fg;h\";", 2, 3)]
         public void LoadFromFile(string text, int expectedRowCount, int expectedCellCount)
         {
-            var directory = Path.GetDirectoryName(new Uri(GetType().Assembly.CodeBase).LocalPath);
-            var path = directory + "\\test.csv";
+            var path = TestFilePath;
 
             File.WriteAllText(path, text, Encoding.Default);
 
@@ -70,8 +80,7 @@ namespace Bytloos.Tests.CSV
         [TestCase(25000, 40, 15, 20)]
         public void LoadFromFile_BigFile(int rowsAmount, int columnsAmount, int minCellLength, int maxCellLength)
         {
-            var directory = Path.GetDirectoryName(new Uri(GetType().Assembly.CodeBase).LocalPath);
-            var path = directory + "\\test.csv";
+            var path = TestFilePath;
 
             StringBuilder sbAllText = new StringBuilder();
 
@@ -91,10 +100,7 @@ namespace Bytloos.Tests.CSV
 
             File.Delete(path);
 
-            Assert.Multiple(() =>
-            {
-                Assert.AreEqual(csvDocument.Rows.Count, rowsAmount);
-            });
+            Assert.AreEqual(csvDocument.Rows.Count, rowsAmount);
         }
 
         [TestCase("123;456;789\r\nasd;fgh;jkl", 1, 1, "fgh")]
@@ -121,10 +127,8 @@ namespace Bytloos.Tests.CSV
 
         private string GetRandomString(int length)
         {
-            const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789;-+'\"";
-
-            return new string(Enumerable.Repeat(chars, length)
-                .Select(s => s[random.Next(s.Length)])
+            return new string(Enumerable.Repeat(AVAILABLE_RANDOM_CHARS, length)
+                .Select(str => str[random.Next(str.Length)])
                 .ToArray());
         }
     }
