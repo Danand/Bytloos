@@ -15,58 +15,29 @@ namespace Bytloos.CSV
         internal const char ALTERNATIVE_QUOTE = '\'';
 
         private readonly bool swapQuotes;
-        private readonly int commonX;
-        private readonly int commonY;
         private readonly char delimiter;
         private readonly char quote;
-        private readonly CSVDocument parentDoc;
 
         /// <summary>
         /// Creates Cell object.
         /// </summary>
-        /// <param name="parentDoc">Reference to a document that contains cell.</param>
-        /// <param name="xPosition">Horizontal position.</param>
-        /// <param name="yPosition">Vertical position.</param>
         /// <param name="data">Text.</param>
         /// <param name="dataParsing">Data parsing condition.</param>
         /// <param name="swapQuotes">>Swap quotes between " and ' if cell contains ones.</param>
         /// <param name="delimiter">Delimiter.</param>
         /// <param name="quote">Quote char.</param>
-        public Cell(
-            CSVDocument parentDoc,
-            int         xPosition,
-            int         yPosition,
+        private Cell(
             string      data,
             bool        dataParsing = false,
             bool        swapQuotes = false,
             char        delimiter   = DEFAULT_DELIMITER,
             char        quote       = DEFAULT_QUOTE)
         {
-            this.parentDoc = parentDoc;
             this.delimiter = delimiter;
             this.quote = quote;
             this.swapQuotes = swapQuotes;
 
-            Data = dataParsing ? Parse(data) : data;
-
-            commonX = X = xPosition;
-            commonY = Y = yPosition;
-        }
-
-        /// <summary>
-        /// Horizontal position.
-        /// </summary>
-        public int X
-        {
-            get; private set;
-        }
-
-        /// <summary>
-        /// Vertical position.
-        /// </summary>
-        public int Y
-        {
-            get; private set;
+            Data = dataParsing ? ParseData(data) : data;
         }
 
         /// <summary>
@@ -78,19 +49,19 @@ namespace Bytloos.CSV
         }
 
         /// <summary>
-        /// First cell of column.
+        /// Horizontal position.
         /// </summary>
-        public Cell ColumnKey
+        internal int X
         {
-            get { return parentDoc.Columns[commonX].First(); }
+            get; private set;
         }
 
         /// <summary>
-        /// First cell of row.
+        /// Vertical position.
         /// </summary>
-        public Cell RowKey
+        internal int Y
         {
-            get { return parentDoc.Rows[commonY].First(); }
+            get; private set;
         }
 
         private string EscapedQuote
@@ -110,10 +81,7 @@ namespace Bytloos.CSV
             }
         }
 
-        /// <summary>
-        /// Gets memberwise clone.
-        /// </summary>
-        /// <returns>Memberwise clone.</returns>
+        /// <inheritdoc />
         public object Clone()
         {
             return MemberwiseClone();
@@ -128,13 +96,26 @@ namespace Bytloos.CSV
             return EscapedData;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="cellString"></param>
+        /// <param name="swapQuotes"></param>
+        /// <param name="delimiter"></param>
+        /// <param name="quote"></param>
+        /// <returns></returns>
+        public static Cell Parse(string cellString, bool swapQuotes, char delimiter, char quote)
+        {
+            return new Cell(cellString, true, swapQuotes, delimiter, quote);
+        }
+
         internal void MovePosition(int xPosition, int yPosition)
         {
             X = xPosition;
             Y = yPosition;
         }
 
-        private string Parse(string cellString)
+        private string ParseData(string cellString)
         {
             if (string.IsNullOrEmpty(cellString))
                 return cellString;
