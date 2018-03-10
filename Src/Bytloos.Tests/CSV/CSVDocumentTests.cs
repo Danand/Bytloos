@@ -47,7 +47,7 @@ namespace Bytloos.Tests.CSV
         [TestCase("\"qw;e\";\"rt;y\";\"ui;o\"\r\n\"as;d\";\"fg;h\";", 2, 3)]
         public void LoadFromFile(string text, int expectedRowCount, int expectedCellCount)
         {
-            var directory = Path.GetDirectoryName(new Uri(typeof(CSVDocumentTests).Assembly.CodeBase).LocalPath);
+            var directory = Path.GetDirectoryName(new Uri(GetType().Assembly.CodeBase).LocalPath);
             var path = directory + "\\test.csv";
 
             File.WriteAllText(path, text, Encoding.Default);
@@ -61,6 +61,26 @@ namespace Bytloos.Tests.CSV
                 Assert.AreEqual(csvDocument.Rows.Count, expectedRowCount);
                 Assert.AreEqual(csvDocument.Rows.Last().Count(), expectedCellCount);
             });
+        }
+
+        [TestCase("123;456;789\r\nasd;fgh;jkl", 1, 1, "fgh")]
+        public void GetRowValue_ByIndex(string text, int rowIndex, int valueIndex, string expectedValue)
+        {
+            var csvDocument = CSVDocument.LoadFromString(text);
+            var row = csvDocument.Rows[rowIndex];
+            var value = row[valueIndex].Data;
+
+            Assert.AreEqual(value, expectedValue);
+        }
+
+        [TestCase("123;456;789\r\nasd;fgh;jkl", "asd", 1, "fgh")]
+        public void GetRowValue_ByName(string text, string rowKey, int valueIndex, string expectedValue)
+        {
+            var csvDocument = CSVDocument.LoadFromString(text);
+            var row = csvDocument.Rows[rowKey];
+            var value = row[valueIndex].Data;
+
+            Assert.AreEqual(value, expectedValue);
         }
     }
 }
