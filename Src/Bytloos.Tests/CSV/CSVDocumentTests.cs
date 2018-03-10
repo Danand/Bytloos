@@ -10,6 +10,8 @@ namespace Bytloos.Tests.CSV
     [TestFixture]
     public class CSVDocumentTests
     {
+        private readonly Random random = new Random();
+
         [TestCase("", 0, 0)]
         [TestCase(" ", 1, 1)]
         [TestCase("123;456;789", 1, 3)]
@@ -63,6 +65,36 @@ namespace Bytloos.Tests.CSV
             });
         }
 
+        [TestCase(50000, 10, 10, 35)]
+        public void LoadFromFile_BigFile(int rowsAmount, int columnsAmount, int minCellLength, int maxCellLength)
+        {
+            var directory = Path.GetDirectoryName(new Uri(GetType().Assembly.CodeBase).LocalPath);
+            var path = directory + "\\test.csv";
+
+            StringBuilder sbAllText = new StringBuilder();
+
+            for (int i = 0; i < rowsAmount; i++)
+            {
+                StringBuilder sbRow = new StringBuilder();
+
+                for (int j = 0; j < columnsAmount; j++)
+                    sbRow.Append($"\"{GetRandomString(random.Next(minCellLength, maxCellLength))}\";");
+
+                sbAllText.AppendLine(sbRow.ToString().TrimEnd(';'));
+            }
+
+            File.WriteAllText(path, sbAllText.ToString(), Encoding.Default);
+
+            var csvDocument = CSVDocument.LoadFromFile(path);
+
+            File.Delete(path);
+
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(csvDocument.Rows.Count, rowsAmount);
+            });
+        }
+
         [TestCase("123;456;789\r\nasd;fgh;jkl", 1, 1, "fgh")]
         public void GetRowValue_ByIndex(string text, int rowIndex, int valueIndex, string expectedValue)
         {
@@ -81,6 +113,15 @@ namespace Bytloos.Tests.CSV
             var value = row[valueIndex].Data;
 
             Assert.AreEqual(value, expectedValue);
+        }
+
+        private string GetRandomString(int length)
+        {
+            const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789;-+'";
+
+            return new string(Enumerable.Repeat(chars, length)
+                .Select(s => s[random.Next(s.Length)])
+                .ToArray());
         }
     }
 }
