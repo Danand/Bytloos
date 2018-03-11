@@ -105,7 +105,7 @@ namespace Bytloos.Tests.CSV
 
         [TestCase("123;456;789\r\nasd;fgh;jkl", 1, 1, "fgh")]
         [TestCase("123;456;789\r\nasd;fgh;jkl", 0, 2, "789")]
-        public void GetRowValue_ByIndex(string text, int rowIndex, int valueIndex, string expectedValue)
+        public void GetRowValue_ByRowIndex(string text, int rowIndex, int valueIndex, string expectedValue)
         {
             var csvDocument = CSVDocument.LoadFromString(text);
             var row = csvDocument.Rows[rowIndex];
@@ -116,11 +116,22 @@ namespace Bytloos.Tests.CSV
 
         [TestCase("123;456;789\r\nasd;fgh;jkl", "asd", 1, "fgh")]
         [TestCase("123;456;789\r\nasd;fgh;jkl", "123", 2, "789")]
-        public void GetRowValue_ByName(string text, string rowKey, int valueIndex, string expectedValue)
+        public void GetRowValue_ByRowName(string text, string rowKey, int valueIndex, string expectedValue)
         {
             var csvDocument = CSVDocument.LoadFromString(text);
             var row = csvDocument.Rows[rowKey];
             var value = row[valueIndex].Data;
+
+            Assert.AreEqual(value, expectedValue);
+        }
+
+        [TestCase("123;456;789\r\nasd;fgh;jkl", "asd", "456", "fgh")]
+        [TestCase("123;456;789\r\nasd;fgh;jkl", "123", "456", "456")]
+        public void GetRowValue_ByColumnName(string text, string rowKey, string columnKey, string expectedValue)
+        {
+            var csvDocument = CSVDocument.LoadFromString(text);
+            var row = csvDocument.Rows[rowKey];
+            var value = row[columnKey].Data;
 
             Assert.AreEqual(value, expectedValue);
         }
