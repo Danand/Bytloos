@@ -29,26 +29,22 @@ namespace Bytloos.CSV
         /// <summary>
         /// Text.
         /// </summary>
-        public string Data
-        {
-            get; set;
-        }
+        public string Data { get; set; }
 
         /// <summary>
         /// Horizontal position.
         /// </summary>
-        internal int X
-        {
-            get; set;
-        }
+        internal int X { get; set; }
 
         /// <summary>
         /// Vertical position.
         /// </summary>
-        internal int Y
-        {
-            get; set;
-        }
+        internal int Y { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        internal CSVDocument ParentDoc { get; set; }
 
         private string EscapedQuote
         {
@@ -82,7 +78,7 @@ namespace Bytloos.CSV
         /// <param name="cellString"></param>
         /// <param name="options"></param>
         /// <returns></returns>
-        public static Cell Parse(string cellString, CSVOptions options)
+        internal static Cell Parse(string cellString, CSVOptions options)
         {
             return new Cell(cellString, true, options);
         }

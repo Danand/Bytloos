@@ -75,6 +75,11 @@ namespace Bytloos.CSV
             return new CSVDocument(text, options);
         }
 
+        internal IEnumerable<Cell> GetColumnKeyCells()
+        {
+            return cells.Where(cell => cell.Y == 0);
+        }
+
         private List<Cell> ParseCells(string text)
         {
             if (text == null)
@@ -130,6 +135,7 @@ namespace Bytloos.CSV
 
                         cell.X = x;
                         cell.Y = y;
+                        cell.ParentDoc = this;
 
                         result.Add(cell);
 

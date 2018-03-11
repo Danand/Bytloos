@@ -6,7 +6,7 @@ using System.Linq;
 namespace Bytloos.CSV
 {
     /// <inheritdoc />
-    public class Rows : IEnumerable<IEnumerable<Cell>>
+    public class Rows : IEnumerable<Row>
     {
         /// <summary>
         /// 
@@ -40,11 +40,11 @@ namespace Bytloos.CSV
         /// 
         /// </summary>
         /// <param name="index"></param>
-        public List<Cell> this[int index]
+        public Row this[int index]
         {
             get
             {
-                return cells.Where(cell => cell.Y == index).ToList();
+                return new Row(cells.Where(cell => cell.Y == index).ToList());
             }
         }
 
@@ -52,7 +52,7 @@ namespace Bytloos.CSV
         /// 
         /// </summary>
         /// <param name="key"></param>
-        public List<Cell> this[string key]
+        public Row this[string key]
         {
             get
             {
@@ -63,18 +63,12 @@ namespace Bytloos.CSV
                 if (keyCell == default(Cell))
                     throw new ArgumentOutOfRangeException(nameof(key));
 
-                return GetLine(keyCell);
+                return new Row(GetLine(keyCell));
             }
         }
 
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            for (var i = 0; i < Count; i++)
-                yield return this[i];
-        }
-
         /// <inheritdoc />
-        public IEnumerator<IEnumerable<Cell>> GetEnumerator()
+        public IEnumerator<Row> GetEnumerator()
         {
             for (var i = 0; i < Count; i++)
                 yield return this[i];
@@ -84,7 +78,7 @@ namespace Bytloos.CSV
         /// 
         /// </summary>
         /// <returns></returns>
-        protected IEnumerable<Cell> GetKeyCells()
+        internal IEnumerable<Cell> GetKeyCells()
         {
             return cells.Where(cell => cell.X == 0);
         }
@@ -97,6 +91,12 @@ namespace Bytloos.CSV
         protected List<Cell> GetLine(Cell keyCell)
         {
             return cells.Where(cell => cell.Y == keyCell.Y).ToList();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            for (var i = 0; i < Count; i++)
+                yield return this[i];
         }
     }
 }
