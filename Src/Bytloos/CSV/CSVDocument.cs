@@ -16,6 +16,17 @@ namespace Bytloos.CSV
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="options"></param>
+        private CSVDocument(CSVOptions options)
+        {
+            this.options = options;
+            cells = new List<Cell>();
+            Rows = new Rows(cells);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="text"></param>
         /// <param name="options"></param>
         private CSVDocument(string text, CSVOptions options)
@@ -29,6 +40,25 @@ namespace Bytloos.CSV
         /// Rows of cells.
         /// </summary>
         public Rows Rows { get; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public static CSVDocument Create()
+        {
+            return new CSVDocument(CSVOptions.Default);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="options"></param>
+        /// <returns></returns>
+        public static CSVDocument Create(CSVOptions options)
+        {
+            return new CSVDocument(options);
+        }
 
         /// <summary>
         /// 
@@ -75,6 +105,15 @@ namespace Bytloos.CSV
             return new CSVDocument(text, options);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="items"></param>
+        public void AppendRow(params string[] items)
+        {
+            Rows.Append(items.Select(item => Cell.Parse(item, options)));
+        }
+
         internal IEnumerable<Cell> GetColumnKeyCells()
         {
             return cells.Where(cell => cell.Y == 0);
@@ -92,11 +131,11 @@ namespace Bytloos.CSV
 
             using (var streamReader = new StreamReader(memoryStream))
             {
-                var y = 0;
+                var rowNumber = 0;
 
                 while (streamReader.Peek() >= 0)
                 {
-                    var x = 0;
+                    var columnNumber = 0;
 
                     var line = streamReader.ReadLine();
 
@@ -133,16 +172,16 @@ namespace Bytloos.CSV
                     {
                         var cell = Cell.Parse(cellString, options);
 
-                        cell.X = x;
-                        cell.Y = y;
+                        cell.X = columnNumber;
+                        cell.Y = rowNumber;
                         cell.ParentDoc = this;
 
                         result.Add(cell);
 
-                        x++;
+                        columnNumber++;
                     }
 
-                    y++;
+                    rowNumber++;
                 }
             }
 
@@ -180,14 +219,5 @@ namespace Bytloos.CSV
         {
             cells.Clear();
         }
-
-        ///// <summary>
-        ///// 
-        ///// </summary>
-        ///// <param name="items"></param>
-        //public void AppendRow(params string[] items)
-        //{
-        //    //Rows.Append(items.Select(item => Cell.Parse(item, swapQuotes, delimiter, quoteChar)));
-        //}
     }
 }

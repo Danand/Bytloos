@@ -83,6 +83,22 @@ namespace Bytloos.CSV
             return cells.Where(cell => cell.X == 0);
         }
 
+        internal void Append(IEnumerable<Cell> newCells)
+        {
+            var rowNumber = Count;
+            var columnNumber = 0;
+
+            foreach (var newCell in newCells)
+            {
+                newCell.Y = rowNumber;
+                newCell.X = columnNumber;
+
+                columnNumber++;
+
+                cells.Add(newCell);
+            }
+        }
+
         /// <summary>
         /// 
         /// </summary>

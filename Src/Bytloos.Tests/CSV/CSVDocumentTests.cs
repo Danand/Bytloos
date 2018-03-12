@@ -136,6 +136,22 @@ namespace Bytloos.Tests.CSV
             Assert.AreEqual(value, expectedValue);
         }
 
+        [TestCase(1, 3, 1, "qwe", "rty", "uio")]
+        [TestCase(2, 5, 2, "qwe", "rty", "uio", "zxc", "vbn")]
+        public void AppendRow(int expectedRowCount, int expectedColumnCount, int iterations, params string[] values)
+        {
+            var csvDocument = CSVDocument.Create();
+
+            for (int i = 0; i < iterations; i++)
+                csvDocument.AppendRow(values);
+
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(csvDocument.Rows.Count, expectedRowCount);
+                Assert.AreEqual(csvDocument.Rows.First().Count(), expectedColumnCount);
+            });
+        }
+
         private string GetRandomString(int length)
         {
             return new string(Enumerable.Repeat(AVAILABLE_RANDOM_CHARS, length)
