@@ -152,6 +152,23 @@ namespace Bytloos.Tests.CSV
             });
         }
 
+        [TestCase("qwe;rty;uio", "qwe", "rty", "uio")]
+        [TestCase("qwe;\"r;ty\";uio", "qwe", "r;ty", "uio")]
+        public void SaveToFile(string expectedFileContent, params string[] values)
+        {
+            var path = TestFilePath;
+            var csvDocument = CSVDocument.Create();
+
+            csvDocument.AppendRow(values);
+            csvDocument.SaveToFile(path);
+
+            var actualFileContent = File.ReadAllText(path);
+
+            File.Delete(path);
+
+            Assert.AreEqual(expectedFileContent, actualFileContent);
+        }
+
         private string GetRandomString(int length)
         {
             return new string(Enumerable.Repeat(AVAILABLE_RANDOM_CHARS, length)
