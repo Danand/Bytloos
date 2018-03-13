@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 
 namespace Bytloos.CSV
@@ -114,6 +115,37 @@ namespace Bytloos.CSV
             Rows.Append(items.Select(item => Cell.Parse(item, options)));
         }
 
+        /// <summary>
+        /// Saves CSV document to file.
+        /// </summary>
+        /// <param name="path"></param>
+        public void SaveToFile(string path)
+        {
+            var dir = Path.GetDirectoryName(path);
+
+            if (dir != null && !Directory.Exists(dir))
+                Directory.CreateDirectory(dir);
+
+            using (var sw = new StreamWriter(path, false, options.Encoding))
+            {
+                sw.Write(
+                    string.Join(
+                        separator:  Environment.NewLine,
+                        values:     Rows.Select(row =>
+                                        string.Join(
+                                            separator:  options.Delimiter.ToString(),
+                                            values:     row))));
+            }
+        }
+
+        /// <summary>
+        /// Clears cells.
+        /// </summary>
+        public void Clear()
+        {
+            cells.Clear();
+        }
+
         internal IEnumerable<Cell> GetColumnKeyCells()
         {
             return cells.Where(cell => cell.Y == 0);
@@ -186,38 +218,6 @@ namespace Bytloos.CSV
             }
 
             return result;
-        }
-
-        ///// <summary>
-        ///// Saves CSV document to file.
-        ///// </summary>
-        ///// <param name="saveAs">Save in another directory.</param>
-        //public void Save(string saveAs = null)
-        //{
-        //    var resultPath = saveAs ?? path;
-        //    var dir = Path.GetDirectoryName(resultPath);
-
-        //    if (dir != null && !Directory.Exists(dir))
-        //        Directory.CreateDirectory(dir);
-
-        //    using (var sw = new StreamWriter(resultPath, false, encoding))
-        //    {
-        //        //sw.WriteLine(
-        //        //    string.Join(
-        //        //        separator:  Environment.NewLine,
-        //        //        values:     Rows.Select(
-        //        //                        row => string.Join(
-        //        //                                separator:  delimiter.ToString(CultureInfo.InvariantCulture),
-        //        //                                values:     row))));
-        //    }
-        //}
-
-        /// <summary>
-        /// Clears cells.
-        /// </summary>
-        public void Clear()
-        {
-            cells.Clear();
         }
     }
 }
