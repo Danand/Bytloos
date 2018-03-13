@@ -1,7 +1,6 @@
 ﻿using System;
 using System.IO;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 
 namespace Bytloos.CSV
@@ -40,7 +39,7 @@ namespace Bytloos.CSV
         /// <summary>
         /// Rows of cells.
         /// </summary>
-        public Rows Rows { get; }
+        public Rows Rows { get; private set; }
 
         /// <summary>
         /// 
@@ -144,6 +143,35 @@ namespace Bytloos.CSV
         public void Clear()
         {
             cells.Clear();
+        }
+
+        /// <summary>
+        /// Cleans rows with lost and redundant cells. May be slow.
+        /// </summary>
+        public void CleanBrokenRows()
+        {
+            var cleanRows
+                = Rows
+                    .GroupBy(row => row.Count())
+                    .OrderByDescending(group => group.Count())
+                    .First();
+
+            var rowNumber = 0;
+
+            foreach (var row in cleanRows)
+            {
+                foreach (var cell in row)
+                    cell.Y = rowNumber;
+
+                rowNumber++;
+            }
+
+            var cleanCells = cleanRows.SelectMany(row => row);
+
+            cells.Clear();
+            cells.AddRange(cleanCells);
+
+            Rows = new Rows(cells);
         }
 
         internal IEnumerable<Cell> GetColumnKeyCells()

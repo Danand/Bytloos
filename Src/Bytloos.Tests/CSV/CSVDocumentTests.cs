@@ -169,6 +169,14 @@ namespace Bytloos.Tests.CSV
             Assert.AreEqual(expectedFileContent, actualFileContent);
         }
 
+        [TestCase("qwe;rty;uio\r\nasd;fgh\r\njkl;zxc;vbn", 1, 2, "vbn")]
+        public void CleanBrokenRows(string text, int expectedRowIndex, int expectedColumnIndex, string expectedCellData)
+        {
+            var csvDocument = CSVDocument.LoadFromString(text);
+            csvDocument.CleanBrokenRows();
+            Assert.AreEqual(expectedCellData, csvDocument.Rows[expectedRowIndex][expectedColumnIndex].Data);
+        }
+
         private string GetRandomString(int length)
         {
             return new string(Enumerable.Repeat(AVAILABLE_RANDOM_CHARS, length)
