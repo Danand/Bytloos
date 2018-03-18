@@ -37,10 +37,10 @@ namespace Bytloos.Tests.CSV
 
             Assert.Multiple(() =>
             {
-                Assert.AreEqual(csvDocument.Rows.Count, expectedRowCount);
+                Assert.AreEqual(expectedRowCount, csvDocument.Rows.Count);
 
                 if (!string.IsNullOrEmpty(text))
-                    Assert.AreEqual(csvDocument.Rows.First().Count(), expectedCellCount);
+                    Assert.AreEqual(expectedCellCount, csvDocument.Rows.First().Count());
             });
         }
 
@@ -52,8 +52,8 @@ namespace Bytloos.Tests.CSV
             
             Assert.Multiple(() =>
             {
-                Assert.AreEqual(csvDocument.Rows.Count, expectedRowCount);
-                Assert.AreEqual(csvDocument.Rows.Last().Count(), expectedCellCount);
+                Assert.AreEqual(expectedRowCount, csvDocument.Rows.Count);
+                Assert.AreEqual(expectedCellCount, csvDocument.Rows.Last().Count());
             });
         }
 
@@ -71,24 +71,24 @@ namespace Bytloos.Tests.CSV
 
             Assert.Multiple(() =>
             {
-                Assert.AreEqual(csvDocument.Rows.Count, expectedRowCount);
-                Assert.AreEqual(csvDocument.Rows.Last().Count(), expectedCellCount);
+                Assert.AreEqual(expectedRowCount, csvDocument.Rows.Count);
+                Assert.AreEqual(expectedCellCount, csvDocument.Rows.Last().Count());
             });
         }
 
         [TestCase(50000, 10, 10, 35)]
         [TestCase(25000, 40, 15, 20)]
-        public void LoadFromFile_BigFile(int rowsAmount, int columnsAmount, int minCellLength, int maxCellLength)
+        public void LoadFromFile_BigFile(int expectedRowsAmount, int columnsAmount, int minCellLength, int maxCellLength)
         {
             var path = TestFilePath;
 
-            StringBuilder sbAllText = new StringBuilder();
+            var sbAllText = new StringBuilder();
 
-            for (int i = 0; i < rowsAmount; i++)
+            for (var i = 0; i < expectedRowsAmount; i++)
             {
-                StringBuilder sbRow = new StringBuilder();
+                var sbRow = new StringBuilder();
 
-                for (int j = 0; j < columnsAmount; j++)
+                for (var j = 0; j < columnsAmount; j++)
                     sbRow.Append($"\"{GetRandomString(random.Next(minCellLength, maxCellLength))}\";");
 
                 sbAllText.AppendLine(sbRow.ToString().TrimEnd(';'));
@@ -100,7 +100,7 @@ namespace Bytloos.Tests.CSV
 
             File.Delete(path);
 
-            Assert.AreEqual(csvDocument.Rows.Count, rowsAmount);
+            Assert.AreEqual(expectedRowsAmount, csvDocument.Rows.Count);
         }
 
         [TestCase("123;456;789\r\nasd;fgh;jkl", 1, 1, "fgh")]
@@ -111,7 +111,7 @@ namespace Bytloos.Tests.CSV
             var row = csvDocument.Rows[rowIndex];
             var value = row[valueIndex].Data;
 
-            Assert.AreEqual(value, expectedValue);
+            Assert.AreEqual(expectedValue, value);
         }
 
         [TestCase("123;456;789\r\nasd;fgh;jkl", "asd", 1, "fgh")]
@@ -122,7 +122,7 @@ namespace Bytloos.Tests.CSV
             var row = csvDocument.Rows[rowKey];
             var value = row[valueIndex].Data;
 
-            Assert.AreEqual(value, expectedValue);
+            Assert.AreEqual(expectedValue, value);
         }
 
         [TestCase("123;456;789\r\nasd;fgh;jkl", "asd", "456", "fgh")]
@@ -133,7 +133,7 @@ namespace Bytloos.Tests.CSV
             var row = csvDocument.Rows[rowKey];
             var value = row[columnKey].Data;
 
-            Assert.AreEqual(value, expectedValue);
+            Assert.AreEqual(expectedValue, value);
         }
 
         [TestCase(1, 3, 1, "qwe", "rty", "uio")]
@@ -142,13 +142,13 @@ namespace Bytloos.Tests.CSV
         {
             var csvDocument = CSVDocument.Create();
 
-            for (int i = 0; i < iterations; i++)
+            for (var i = 0; i < iterations; i++)
                 csvDocument.AppendRow(values);
 
             Assert.Multiple(() =>
             {
-                Assert.AreEqual(csvDocument.Rows.Count, expectedRowCount);
-                Assert.AreEqual(csvDocument.Rows.First().Count(), expectedColumnCount);
+                Assert.AreEqual(expectedRowCount, csvDocument.Rows.Count);
+                Assert.AreEqual(expectedColumnCount, csvDocument.Rows.First().Count());
             });
         }
 
