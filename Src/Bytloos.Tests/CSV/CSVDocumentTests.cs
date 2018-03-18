@@ -186,6 +186,7 @@ namespace Bytloos.Tests.CSV
         }
 
         [TestCase("qwe;rty;uio\r\nasd;fgh\r\njkl;zxc;vbn", 1, 2, "vbn")]
+        [TestCase("qwe;rty;uio\r\nasd;fgh\r\njkl;zxc;vbn", 1, 1, "zxc")]
         public void CleanBrokenRows(string text, int expectedRowIndex, int expectedColumnIndex, string expectedCellData)
         {
             var csvDocument = CSVDocument.LoadFromString(text);

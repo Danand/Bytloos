@@ -42,7 +42,7 @@ namespace Bytloos.CSV
         internal int Y { get; set; }
 
         /// <summary>
-        /// 
+        /// Document reference.
         /// </summary>
         internal CSVDocument ParentDoc { get; set; }
 
@@ -72,12 +72,6 @@ namespace Bytloos.CSV
             return EscapedData;
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="cellString"></param>
-        /// <param name="options"></param>
-        /// <returns></returns>
         internal static Cell Parse(string cellString, CSVOptions options)
         {
             return new Cell(cellString, true, options);
