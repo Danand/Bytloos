@@ -76,6 +76,22 @@ namespace Bytloos.Tests.CSV
             });
         }
 
+        [TestCase("123;456;789\r\nasd;fgh;jkl", 2, 2)]
+        [TestCase("123;456;789\r\nasd;fgh;jkl\r\nzxc;vbn;mqw", 2, 2)]
+        public void LoadFromFile_LimitRows(string text, int expectedRowCount, int rowLimit)
+        {
+            var path = TestFilePath;
+
+            File.WriteAllText(path, text, Encoding.Default);
+
+            var options = new CSVOptions { RowLimit = rowLimit };
+            var csvDocument = CSVDocument.LoadFromFile(path, options);
+
+            File.Delete(path);
+
+            Assert.AreEqual(expectedRowCount, csvDocument.Rows.Count);
+        }
+
         [TestCase(50000, 10, 10, 35)]
         [TestCase(25000, 40, 15, 20)]
         public void LoadFromFile_BigFile(int expectedRowsAmount, int columnsAmount, int minCellLength, int maxCellLength)

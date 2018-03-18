@@ -193,7 +193,7 @@ namespace Bytloos.CSV
             {
                 var rowNumber = 0;
 
-                while (streamReader.Peek() >= 0)
+                while (streamReader.Peek() >= 0 && CheckRowLimit(rowNumber))
                 {
                     var columnNumber = 0;
 
@@ -246,6 +246,16 @@ namespace Bytloos.CSV
             }
 
             return result;
+        }
+
+        private bool CheckRowLimit(int rowNumber)
+        {
+            var limit = options.RowLimit;
+
+            if (limit == CSVOptions.DEFAULT_ROW_LIMIT)
+                return true;
+
+            return rowNumber < limit;
         }
     }
 }

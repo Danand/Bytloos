@@ -7,41 +7,40 @@ namespace Bytloos.CSV
     /// </summary>
     public class CSVOptions
     {
+        internal const bool DEFAULT_SWAP_QUOTES = false;
+        internal const int DEFAULT_ROW_LIMIT = 0;
+
         /// <summary>
         /// 
         /// </summary>
         public static CSVOptions Default
         {
-            get
-            {
-                return new CSVOptions
-                {
-                    SwapQuotes = false,
-                    Delimiter = Cell.DEFAULT_DELIMITER,
-                    QuoteChar = Cell.DEFAULT_QUOTE,
-                    Encoding = Encoding.UTF8
-                };
-            }
+            get { return new CSVOptions(); }
         }
 
         /// <summary>
         /// 
         /// </summary>
-        public bool SwapQuotes { get; set; }
+        public bool SwapQuotes { get; set; } = DEFAULT_SWAP_QUOTES;
 
         /// <summary>
         /// 
         /// </summary>
-        public char Delimiter { get; set; }
+        public int RowLimit { get; set; } = DEFAULT_ROW_LIMIT;
 
         /// <summary>
         /// 
         /// </summary>
-        public char QuoteChar { get; set; }
+        public char Delimiter { get; set; } = Cell.DEFAULT_DELIMITER;
 
         /// <summary>
         /// 
         /// </summary>
-        public Encoding Encoding { get; set; }
+        public char QuoteChar { get; set; } = Cell.DEFAULT_QUOTE;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public Encoding Encoding { get; set; } = Encoding.UTF8;
     }
 }
