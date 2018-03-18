@@ -13,10 +13,6 @@ namespace Bytloos.CSV
         private readonly CSVOptions options;
         private readonly List<Cell> cells;
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="options"></param>
         private CSVDocument(CSVOptions options)
         {
             this.options = options;
@@ -24,11 +20,6 @@ namespace Bytloos.CSV
             Rows = new Rows(cells);
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="text"></param>
-        /// <param name="options"></param>
         private CSVDocument(string text, CSVOptions options)
         {
             this.options = options;
@@ -42,50 +33,50 @@ namespace Bytloos.CSV
         public Rows Rows { get; private set; }
 
         /// <summary>
-        /// 
+        /// Creates CSV document.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>CSV document instance with default options.</returns>
         public static CSVDocument Create()
         {
             return new CSVDocument(CSVOptions.Default);
         }
 
         /// <summary>
-        /// 
+        /// Creates CSV document.
         /// </summary>
-        /// <param name="options"></param>
-        /// <returns></returns>
+        /// <param name="options">Options such as encoding, row limit, etc.</param>
+        /// <returns>CSV document instance with custom options.</returns>
         public static CSVDocument Create(CSVOptions options)
         {
             return new CSVDocument(options);
         }
 
         /// <summary>
-        /// 
+        /// Creates CSV document.
         /// </summary>
-        /// <param name="text"></param>
-        /// <returns></returns>
+        /// <param name="text">CSV input string.</param>
+        /// <returns>CSV document instance with default options.</returns>
         public static CSVDocument LoadFromString(string text)
         {
             return new CSVDocument(text, CSVOptions.Default);
         }
 
         /// <summary>
-        /// 
+        /// Creates CSV document.
         /// </summary>
-        /// <param name="text"></param>
-        /// <param name="options"></param>
-        /// <returns></returns>
+        /// <param name="text">CSV input string.</param>
+        /// <param name="options">Options such as encoding, row limit, etc.</param>
+        /// <returns>CSV document instance with custom options.</returns>
         public static CSVDocument LoadFromString(string text, CSVOptions options)
         {
             return new CSVDocument(text, options);
         }
 
         /// <summary>
-        /// 
+        /// Creates CSV document.
         /// </summary>
-        /// <param name="path"></param>
-        /// <returns></returns>
+        /// <param name="path">Path to CSV file.</param>
+        /// <returns>CSV document instance with default options.</returns>
         public static CSVDocument LoadFromFile(string path)
         {
             var options = CSVOptions.Default;
@@ -94,11 +85,11 @@ namespace Bytloos.CSV
         }
 
         /// <summary>
-        /// 
+        /// Creates CSV document.
         /// </summary>
-        /// <param name="path"></param>
-        /// <param name="options"></param>
-        /// <returns></returns>
+        /// <param name="path">Path to CSV file.</param>
+        /// <param name="options">Options such as encoding, row limit, etc.</param>
+        /// <returns>CSV document instance with custom options.</returns>
         public static CSVDocument LoadFromFile(string path, CSVOptions options)
         {
             var text = File.ReadAllText(path, options.Encoding);
@@ -106,9 +97,9 @@ namespace Bytloos.CSV
         }
 
         /// <summary>
-        /// 
+        /// Appends cells to last row.
         /// </summary>
-        /// <param name="items"></param>
+        /// <param name="items">List of cell items.</param>
         public void AppendRow(params string[] items)
         {
             Rows.Append(items.Select(item => Cell.Parse(item, options)));
@@ -117,7 +108,7 @@ namespace Bytloos.CSV
         /// <summary>
         /// Saves CSV document to file.
         /// </summary>
-        /// <param name="path"></param>
+        /// <param name="path">Path where CSV file will be saved.</param>
         public void SaveToFile(string path)
         {
             var dir = Path.GetDirectoryName(path);

@@ -8,22 +8,15 @@ namespace Bytloos.CSV
     /// <inheritdoc />
     public class Rows : IEnumerable<Row>
     {
-        /// <summary>
-        /// 
-        /// </summary>
         protected readonly List<Cell> cells;
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="cells"></param>
         internal Rows(List<Cell> cells)
         {
             this.cells = cells;
         }
 
         /// <summary>
-        /// 
+        /// Rows count.
         /// </summary>
         public int Count
         {
@@ -37,9 +30,9 @@ namespace Bytloos.CSV
         }
 
         /// <summary>
-        /// 
+        /// Returns row by index.
         /// </summary>
-        /// <param name="index"></param>
+        /// <param name="index">Row index.</param>
         public Row this[int index]
         {
             get
@@ -49,9 +42,9 @@ namespace Bytloos.CSV
         }
 
         /// <summary>
-        /// 
+        /// Returns row by key.
         /// </summary>
-        /// <param name="key"></param>
+        /// <param name="key">Row key by first row cell.</param>
         public Row this[string key]
         {
             get
@@ -74,10 +67,6 @@ namespace Bytloos.CSV
                 yield return this[i];
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
         internal IEnumerable<Cell> GetKeyCells()
         {
             return cells.Where(cell => cell.X == 0);
@@ -99,11 +88,6 @@ namespace Bytloos.CSV
             }
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="keyCell"></param>
-        /// <returns></returns>
         protected List<Cell> GetLine(Cell keyCell)
         {
             return cells.Where(cell => cell.Y == keyCell.Y).ToList();

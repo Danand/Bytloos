@@ -16,9 +16,9 @@ namespace Bytloos.CSV
         }
 
         /// <summary>
-        /// 
+        /// Returns cell by index.
         /// </summary>
-        /// <param name="index"></param>
+        /// <param name="index">Cell index in row.</param>
         public Cell this[int index]
         {
             get
@@ -33,9 +33,9 @@ namespace Bytloos.CSV
         }
 
         /// <summary>
-        /// 
+        /// Returns cell by column key.
         /// </summary>
-        /// <param name="key"></param>
+        /// <param name="key">Cell key by column.</param>
         public Cell this[string key]
         {
             get
