@@ -10,9 +10,12 @@ namespace Bytloos.CSV
     {
         protected readonly List<Cell> cells;
 
+        private Dictionary<int, List<Cell>> cellsDict; // Prefomance experiment.
+
         internal Rows(List<Cell> cells)
         {
             this.cells = cells;
+            UpdateCellsDict();
         }
 
         /// <summary>
@@ -37,7 +40,7 @@ namespace Bytloos.CSV
         {
             get
             {
-                return new Row(cells.Where(cell => cell.Y == index).ToList());
+                return new Row(cellsDict[index]);
             }
         }
 
@@ -86,6 +89,8 @@ namespace Bytloos.CSV
 
                 cells.Add(newCell);
             }
+
+            UpdateCellsDict();
         }
 
         protected List<Cell> GetLine(Cell keyCell)
@@ -97,6 +102,11 @@ namespace Bytloos.CSV
         {
             for (var i = 0; i < Count; i++)
                 yield return this[i];
+        }
+
+        private void UpdateCellsDict()
+        {
+            cellsDict = cells.GroupBy(cell => cell.Y).ToDictionary(group => group.Key, group => group.ToList());
         }
     }
 }
