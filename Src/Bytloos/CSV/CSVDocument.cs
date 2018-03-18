@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Globalization;
 using System.IO;
-using System.Text;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -10,187 +8,201 @@ namespace Bytloos.CSV
     /// <summary>
     /// CSV document.
     /// </summary>
-    public class CSVDocument : IDisposable
+    public class CSVDocument
     {
-        private const char DEFAULT_SOURCE_SEPARATOR = ';';
+        private readonly CSVOptions options;
+        private readonly List<Cell> cells;
 
-        private readonly int columnsAmountFilter;
-        private readonly bool swapQuotes;
-        private readonly bool silentMode;
-        private readonly char delimiter;
-        private readonly char quoteChar;
-        private readonly string path;
-        private readonly string[] readingLineFilters;
-        private readonly Encoding encoding;
+        private CSVDocument(CSVOptions options)
+        {
+            this.options = options;
+            cells = new List<Cell>();
+            Rows = new Rows(cells);
+        }
 
-        private List<Cell> cells;
-        private List<List<Cell>> cachedRows;
-        private List<List<Cell>> cachedColumns;
+        private CSVDocument(string text, CSVOptions options)
+        {
+            this.options = options;
+            cells = ParseCells(text);
+            Rows = new Rows(cells);
+        }
 
-        // TODO: move parameters to settings class.
         /// <summary>
-        /// Creates CSV document object.
+        /// Rows of cells.
+        /// </summary>
+        public Rows Rows { get; private set; }
+
+        /// <summary>
+        /// Creates CSV document.
+        /// </summary>
+        /// <returns>CSV document instance with default options.</returns>
+        public static CSVDocument Create()
+        {
+            return new CSVDocument(CSVOptions.Default);
+        }
+
+        /// <summary>
+        /// Creates CSV document.
+        /// </summary>
+        /// <param name="options">Options such as encoding, row limit, etc.</param>
+        /// <returns>CSV document instance with custom options.</returns>
+        public static CSVDocument Create(CSVOptions options)
+        {
+            return new CSVDocument(options);
+        }
+
+        /// <summary>
+        /// Creates CSV document.
+        /// </summary>
+        /// <param name="text">CSV input string.</param>
+        /// <returns>CSV document instance with default options.</returns>
+        public static CSVDocument LoadFromString(string text)
+        {
+            return new CSVDocument(text, CSVOptions.Default);
+        }
+
+        /// <summary>
+        /// Creates CSV document.
+        /// </summary>
+        /// <param name="text">CSV input string.</param>
+        /// <param name="options">Options such as encoding, row limit, etc.</param>
+        /// <returns>CSV document instance with custom options.</returns>
+        public static CSVDocument LoadFromString(string text, CSVOptions options)
+        {
+            return new CSVDocument(text, options);
+        }
+
+        /// <summary>
+        /// Creates CSV document.
         /// </summary>
         /// <param name="path">Path to CSV file.</param>
-        /// <param name="encoding">Encoding.</param>
-        /// <param name="delimiter">Delimiter.</param>
-        /// <param name="quoteChar">Quote char.</param>
-        /// <param name="swapQuotes">Swap quotes between " and ' if cell contains ones.</param>
-        /// <param name="silentMode">Suppress exceptions.</param>
-        /// <param name="columnsAmountFilter">Number of columns limiting to.</param>
-        /// <param name="readingLineFilters">Array of string using as filter when parsing CSV.</param>
-        public CSVDocument(
-            string      path,
-            Encoding    encoding            = null,
-            char        delimiter           = Cell.DEFAULT_DELIMITER,
-            char        quoteChar           = Cell.DEFAULT_QUOTE,
-            bool        swapQuotes          = false,
-            bool        silentMode          = false,
-            int         columnsAmountFilter = 0,
-            string[]    readingLineFilters  = null)
+        /// <returns>CSV document instance with default options.</returns>
+        public static CSVDocument LoadFromFile(string path)
         {
-            this.path = path;
-            this.encoding = encoding ?? Encoding.Default;
-            this.delimiter = delimiter;
-            this.quoteChar = quoteChar;
-            this.swapQuotes = swapQuotes;
-            this.silentMode = silentMode;
-            this.columnsAmountFilter = columnsAmountFilter;
-            this.readingLineFilters = readingLineFilters;
-
-            cells = new List<Cell>();
-
-            if (File.Exists(this.path))
-                Load(this.path, this.encoding, this.delimiter);
+            var options = CSVOptions.Default;
+            var text = File.ReadAllText(path, options.Encoding);
+            return new CSVDocument(text, options);
         }
 
         /// <summary>
-        /// Row of cells.
+        /// Creates CSV document.
         /// </summary>
-        public List<List<Cell>> Rows
+        /// <param name="path">Path to CSV file.</param>
+        /// <param name="options">Options such as encoding, row limit, etc.</param>
+        /// <returns>CSV document instance with custom options.</returns>
+        public static CSVDocument LoadFromFile(string path, CSVOptions options)
         {
-            get { return cachedRows ?? (cachedRows = GetLines()); }
+            var text = File.ReadAllText(path, options.Encoding);
+            return new CSVDocument(text, options);
         }
 
         /// <summary>
-        /// Column of cells.
+        /// Appends cells to last row.
         /// </summary>
-        public List<List<Cell>> Columns
+        /// <param name="items">List of cell items.</param>
+        public void AppendRow(params string[] items)
         {
-            get { return cachedColumns ?? (cachedColumns = GetLines(vertical: true)); }
+            Rows.Append(items.Select(item => Cell.Parse(item, options)));
         }
 
         /// <summary>
-        /// Serializes object fields as CSV table.
+        /// Saves CSV document to file.
         /// </summary>
-        /// <param name="target">Target object.</param>
-        /// <param name="document">CSV document for writing fields in.</param>
-        public static void Serialize(object target, CSVDocument document)
+        /// <param name="path">Path where CSV file will be saved.</param>
+        public void SaveToFile(string path)
         {
-            foreach (var fieldInfo in target.GetType().GetFields())
+            var dir = Path.GetDirectoryName(path);
+
+            if (dir != null && !Directory.Exists(dir))
+                Directory.CreateDirectory(dir);
+
+            using (var sw = new StreamWriter(path, false, options.Encoding))
             {
-                if (fieldInfo.FieldType.GetInterfaces().Contains(typeof(ISerializable)))
-                {
-                    document.AppendRow(
-                        fieldInfo.Name,
-                        ((ISerializable)fieldInfo.GetValue(target)).GetStringValue());
-                }
+                sw.Write(
+                    string.Join(
+                        separator:  Environment.NewLine,
+                        values:     Rows.Select(row =>
+                                        string.Join(
+                                            separator:  options.Delimiter.ToString(),
+                                            values:     row))));
+            }
+        }
+
+        /// <summary>
+        /// Clears cells.
+        /// </summary>
+        public void Clear()
+        {
+            cells.Clear();
+        }
+
+        /// <summary>
+        /// Cleans rows with lost and redundant cells. May be slow.
+        /// </summary>
+        public void CleanBrokenRows()
+        {
+            var cleanRows
+                = Rows
+                    .GroupBy(row => row.Count())
+                    .OrderByDescending(group => group.Count())
+                    .First();
+
+            var rowNumber = 0;
+
+            foreach (var row in cleanRows)
+            {
+                foreach (var cell in row)
+                    cell.Y = rowNumber;
+
+                rowNumber++;
             }
 
-            foreach (var propertyInfo in target.GetType().GetProperties())
-            {
-                if (propertyInfo.PropertyType.GetInterfaces().Contains(typeof(ISerializable)))
-                {
-                    document.AppendRow(
-                        propertyInfo.Name,
-                        ((ISerializable)propertyInfo.GetValue(obj: target, index: null)).GetStringValue());
-                }
-            }
+            var cleanCells = cleanRows.SelectMany(row => row);
 
-            document.Save();
+            cells.Clear();
+            cells.AddRange(cleanCells);
+
+            Rows = new Rows(cells);
         }
 
-        /// <summary>
-        /// Deserializes object fields from CSV table.
-        /// </summary>
-        /// <typeparam name="T">Object type.</typeparam>
-        /// <param name="document">CSV document with stored object.</param>
-        /// <returns>Deserialized object.</returns>
-        public static T Deserialize<T>(CSVDocument document)
-            where T : new()
+        internal IEnumerable<Cell> GetColumnKeyCells()
         {
-            var result = new T();
-
-            foreach (var row in document.Rows)
-            {
-                foreach (var fieldInfo in typeof(T).GetFields())
-                {
-                    if (fieldInfo.Name == row.First().Data && fieldInfo.FieldType.GetInterfaces().Contains(typeof(ISerializable)))
-                    {
-                        fieldInfo.SetValue(result, Activator.CreateInstance(fieldInfo.FieldType));
-                        ((ISerializable)fieldInfo.GetValue(result)).SetValueFromString(row.Last().Data);
-                    }
-                }
-            }
-
-            foreach (var row in document.Rows)
-            {
-                foreach (var propertyInfo in typeof(T).GetProperties())
-                {
-                    if (propertyInfo.Name == row.First().Data && propertyInfo.PropertyType.GetInterfaces().Contains(typeof(ISerializable)))
-                    {
-                        propertyInfo.SetValue(
-                            obj:    result,
-                            value:  Activator.CreateInstance(propertyInfo.PropertyType),
-                            index:  null);
-
-                        ((ISerializable)propertyInfo.GetValue(obj: result, index: null)).SetValueFromString(row.Last().Data);
-                    }
-                }
-            }
-
-            return result;
+            return cells.Where(cell => cell.Y == 0);
         }
 
-        /// <inheritdoc />
-        /// <summary>
-        /// Disposes and saves changes to file.
-        /// </summary>
-        public void Dispose()
+        private List<Cell> ParseCells(string text)
         {
-            Save();
-        }
+            if (text == null)
+                throw new ArgumentNullException(nameof(text));
 
-        /// <summary>
-        /// Loads CSV document from file.
-        /// </summary>
-        /// <param name="sourcePath">Path to CSV file.</param>
-        /// <param name="sourceEncoding">Encoding.</param>
-        /// <param name="sourceSeparator">Delimiter.</param>
-        public void Load(string sourcePath, Encoding sourceEncoding = null, char sourceSeparator = DEFAULT_SOURCE_SEPARATOR)
-        {
-            using (var streamReader = new StreamReader(sourcePath, sourceEncoding ?? Encoding.Default))
+            var result = new List<Cell>();
+
+            var textBytes = options.Encoding.GetBytes(text);
+            var memoryStream = new MemoryStream(textBytes);
+
+            using (var streamReader = new StreamReader(memoryStream))
             {
-                var y = 0;
+                var rowNumber = 0;
 
-                while (streamReader.Peek() >= 0)
+                while (streamReader.Peek() >= 0 && CheckRowLimit(rowNumber))
                 {
-                    var x = 0;
+                    var columnNumber = 0;
+
                     var line = streamReader.ReadLine();
 
-                    if (line == null || (readingLineFilters != null && readingLineFilters.Any(line.Contains)))
+                    if (line == null)
                         continue;
 
-                    var cellStrings = new List<String>();
-                    var cellStringsDraft = line.Split(sourceSeparator);
+                    var cellStrings = new List<string>();
+                    var cellStringsDraft = line.Split(options.Delimiter);
                     var waitingForComplete = false;
                     var cellStringBuffer = string.Empty;
 
                     foreach (var cellStringDraft in cellStringsDraft)
                     {
                         waitingForComplete
-                            = (cellStringDraft.FirstOrDefault() == quoteChar && cellStringDraft.LastOrDefault() != quoteChar) ||
-                              (waitingForComplete && cellStringDraft.LastOrDefault() != quoteChar);
+                            = (cellStringDraft.FirstOrDefault() == options.QuoteChar && cellStringDraft.LastOrDefault() != options.QuoteChar) ||
+                              (waitingForComplete && cellStringDraft.LastOrDefault() != options.QuoteChar);
 
                         if (!waitingForComplete)
                         {
@@ -203,331 +215,38 @@ namespace Bytloos.CSV
                         }
                         else
                         {
-                            cellStringBuffer += (cellStringDraft + sourceSeparator);
+                            cellStringBuffer += cellStringDraft + options.Delimiter;
                         }
                     }
 
-                    if (columnsAmountFilter != 0 && cellStrings.Count != columnsAmountFilter)
-                        continue;
-
                     foreach (var cellString in cellStrings)
                     {
-                        cells.Add(
-                            new Cell(
-                                parentDoc:      this,
-                                xPosition:      x++,
-                                yPosition:      y,
-                                data:           cellString,
-                                dataParsing:    true,
-                                delimiter:      delimiter,
-                                quote:          quoteChar));
+                        var cell = Cell.Parse(cellString, options);
+
+                        cell.X = columnNumber;
+                        cell.Y = rowNumber;
+                        cell.ParentDoc = this;
+
+                        result.Add(cell);
+
+                        columnNumber++;
                     }
 
-                    y++;
+                    rowNumber++;
                 }
             }
-        }
-
-        /// <summary>
-        /// Saves CSV document to file.
-        /// </summary>
-        /// <param name="saveAs">Save in another directory.</param>
-        public void Save(string saveAs = null)
-        {
-            var resultPath = saveAs ?? path;
-            var dir = Path.GetDirectoryName(resultPath);
-
-            if (dir != null && !Directory.Exists(dir))
-                Directory.CreateDirectory(dir);
-
-            using (var sw = new StreamWriter(resultPath, false, encoding))
-            {
-                sw.WriteLine(
-                    string.Join(
-                        separator:  Environment.NewLine,
-                        values:     Rows.Select(
-                                        row => string.Join(
-                                                separator:  delimiter.ToString(CultureInfo.InvariantCulture),
-                                                values:     row))));
-            }
-        }
-
-        /// <summary>
-        /// Gets row by string key.
-        /// </summary>
-        /// <param name="key">String representation of row's first cell.</param>
-        /// <returns>Row of cells.</returns>
-        public List<Cell> GetRow(string key)
-        {
-            return GetLine(key);
-        }
-
-        /// <summary>
-        /// Gets column by string key.
-        /// </summary>
-        /// <param name="key">String representation of column's first cell.</param>
-        /// <returns>Column of cells.</returns>
-        public List<Cell> GetColumn(string key)
-        {
-            return GetLine(key, isColumn: true);
-        }
-
-        /// <summary>
-        /// Clears cells.
-        /// </summary>
-        public void Clear()
-        {
-            cells = new List<Cell>();
-        }
-
-        /// <summary>
-        /// Appends cells to last row.
-        /// </summary>
-        /// <param name="cellList">List of cell objects.</param>
-        public void AppendCellsHorizontal(List<Cell> cellList) { AppendLine(cellList, isNewLine: false); }
-
-        /// <summary>
-        /// Appends cells to last last row.
-        /// </summary>
-        /// <param name="cellObjects">Array of objects.</param>
-        public void AppendCellsHorizontal(object[] cellObjects) { AppendLine(cellObjects, isNewLine: false); }
-
-        /// <summary>
-        /// Appends cells to last last row.
-        /// </summary>
-        /// <param name="cellStrings">String params.</param>
-        public void AppendCellsHorizontal(params string[] cellStrings) { AppendLine(cellStrings.Select(cell => (object)cell).ToArray(), isNewLine: false); }
-
-        /// <summary>
-        /// Appends cells to last column.
-        /// </summary>
-        /// <param name="cellList">List of cell objects.</param>
-        public void AppendCellsVertical(List<Cell> cellList) { AppendLine(cellList, isColumn: true, isNewLine: false); }
-
-        /// <summary>
-        /// Appends cells to last column.
-        /// </summary>
-        /// <param name="cellObjects">Array of objects.</param>
-        public void AppendCellsVertical(object[] cellObjects) { AppendLine(cellObjects, isColumn: true, isNewLine: false); }
-
-        /// <summary>
-        /// Appends cells to last column.
-        /// </summary>
-        /// <param name="cellStrings">String params.</param>
-        public void AppendCellsVertical(params string[] cellStrings) { AppendLine(cellStrings.Select(cell => (object)cell).ToArray(), isColumn: true, isNewLine: false); }
-
-        /// <summary>
-        /// Appends cells as last row.
-        /// </summary>
-        /// <param name="cellList">List of cell objects.</param>
-        public void AppendRow(List<Cell> cellList) { AppendLine(cellList); }
-
-        /// <summary>
-        /// Appends cells as last column.
-        /// </summary>
-        /// <param name="cellList">List of cell objects.</param>
-        public void AppendColumn(List<Cell> cellList) { AppendLine(cellList, isColumn: true); }
-
-        /// <summary>
-        /// Appends cells as last last row.
-        /// </summary>
-        /// <param name="cellObjects">Array of objects.</param>
-        public void AppendRow(object[] cellObjects) { AppendLine(cellObjects); }
-
-        /// <summary>
-        /// Appends cells as last column.
-        /// </summary>
-        /// <param name="cellObjects">Array of objects.</param>
-        public void AppendColumn(object[] cellObjects) { AppendLine(cellObjects, isColumn: true); }
-
-        /// <summary>
-        /// Appends cells as last last row.
-        /// </summary>
-        /// <param name="cellStrings">String params.</param>
-        public void AppendRow(params string[] cellStrings) { AppendLine(cellStrings.Select(cell => (object)cell).ToArray()); }
-
-        /// <summary>
-        /// Appends cells as last column.
-        /// </summary>
-        /// <param name="cellStrings">String params.</param>
-        public void AppendColumn(params string[] cellStrings) { AppendLine(cellStrings.Select(cell => (object)cell).ToArray(), isColumn: true); }
-
-        /// <summary>
-        /// Inserts cells as row at index.
-        /// </summary>
-        /// <param name="cellObjects">List of cell objects.</param>
-        /// <param name="position">Index.</param>
-        public void InsertRow(List<Cell> cellObjects, int position) { InsertLine(cellObjects, position); }
-
-        /// <summary>
-        /// Inserts cells as column at index.
-        /// </summary>
-        /// <param name="cellObjects">List of cell objects.</param>
-        /// <param name="position">Index.</param>
-        public void InsertColumn(List<Cell> cellObjects, int position) { InsertLine(cellObjects, position, isColumn: true); }
-
-        /// <summary>
-        /// Inserts cells as row at index.
-        /// </summary>
-        /// <param name="cellObjects">Array of objects.</param>
-        /// <param name="position">Index.</param>
-        public void InsertRow(object[] cellObjects, int position) { InsertLine(cellObjects, position); }
-
-        /// <summary>
-        /// Inserts cells as row at index.
-        /// </summary>
-        /// <param name="cellObjects">Array of objects.</param>
-        /// <param name="position">Index.</param>
-        public void InsertColumn(object[] cellObjects, int position) { InsertLine(cellObjects, position, isColumn: true); }
-
-        /// <summary>
-        /// Inserts cells as row at index.
-        /// </summary>
-        /// <param name="cellStrings">String params.</param>
-        /// <param name="position">Index.</param>
-        public void InsertRow(string[] cellStrings, int position) { InsertLine(cellStrings.Select(cell => (object)cell).ToArray(), position); }
-
-        /// <summary>
-        /// Inserts cells as column at index.
-        /// </summary>
-        /// <param name="cellStrings">String params.</param>
-        /// <param name="position">Index.</param>
-        public void InsertColumn(string[] cellStrings, int position) { InsertLine(cellStrings.Select(cell => (object)cell).ToArray(), position, isColumn: true); }
-
-        private void AppendLine<TObject>(
-            IEnumerable<TObject>    cellObjects,
-            bool                    isColumn    = false,
-            int                     inset       = -1,
-            bool                    isNewLine   = true)
-        {
-            var x
-                = ComputePosition(
-                    isVertical: false,
-                    forColumn:  isColumn,
-                    forNewLine: isNewLine,
-                    inset:      inset);
-
-            var y
-                = ComputePosition(
-                    isVertical: true,
-                    forColumn:  isColumn,
-                    forNewLine: isNewLine,
-                    inset:      inset);
-
-            if (cellObjects is List<Cell>)
-            {
-                foreach (var clonedCell in ((List<Cell>)cellObjects).Select(cellObject => (Cell)cellObject.Clone()))
-                {
-                    clonedCell.MovePosition(
-                        xPosition:  isColumn ? x : x++,
-                        yPosition:  !isColumn ? y : y++);
-
-                    cells.Add(clonedCell);
-                }
-            }
-            else
-            {
-                foreach (var cellObject in cellObjects)
-                {
-                    cells.Add(
-                        new Cell(
-                            parentDoc:  this,
-                            xPosition:  isColumn ? x : x++,
-                            yPosition:  !isColumn ? y : y++,
-                            data:       cellObject != null ? cellObject.ToString() : string.Empty,
-                            quote:      quoteChar,
-                            swapQuotes: swapQuotes));
-                }
-            }
-
-            if (inset > -1)
-                CleanUpCells();
-
-            cachedRows = null;
-            cachedColumns = null;
-        }
-
-        private void InsertLine(List<Cell> cellObjects, int position, bool isColumn = false)
-        {
-            AppendLine(cellObjects, isColumn, position);
-        }
-
-        private void InsertLine(object[] cellObjects, int position, bool isColumn = false)
-        {
-            AppendLine(cellObjects, isColumn, position);
-        }
-
-        private void CleanUpCells()
-        {
-            cells
-                = cells
-                    .GroupBy(cell => new { cell.X, cell.Y })
-                    .Select(group => group.Last())
-                    .ToList();
-        }
-
-        private int ComputePosition(
-            bool    isVertical  = false,
-            bool    forColumn   = false,
-            bool    forNewLine  = true,
-            int     inset       = -1)
-        {
-            var point
-                = isVertical
-                    ? !forColumn ? Rows.Count : 0
-                    : forColumn ? Columns.Count : 0;
-
-            if (!forNewLine)
-            {
-                point
-                    = isVertical
-                        ? !forColumn
-                            ? Rows.Any() ? Rows.Count - 1 : 0
-                            : Columns.Any() ? Columns.Last().Count : 0
-                        : !forColumn
-                            ? Rows.Any() ? Rows.Last().Count : 0
-                            : Columns.Any() ? Columns.Count - 1 : 0;
-            }
-
-            return isVertical
-                ? inset > -1 && !forColumn ? inset : point
-                : inset > -1 && forColumn ? inset : point;
-        }
-
-        private List<Cell> GetLine(string key, bool isColumn = false)
-        {
-            var result = (isColumn ? Columns : Rows).Find(line => line[0].Data == key);
-
-            if (result == null && !silentMode)
-                throw new InvalidOperationException();
 
             return result;
         }
 
-        private List<List<Cell>> GetLines(bool vertical = false)
+        private bool CheckRowLimit(int rowNumber)
         {
-            var lines = new List<List<Cell>>();
+            var limit = options.RowLimit;
 
-            foreach (var cell in cells)
-            {
-                while ((vertical ? cell.X : cell.Y) >= lines.Count)
-                    lines.Add(new List<Cell>());
+            if (limit == CSVOptions.DEFAULT_ROW_LIMIT)
+                return true;
 
-                while ((vertical ? cell.Y : cell.X) > lines[vertical ? cell.X : cell.Y].Count)
-                {
-                    lines[vertical ? cell.X : cell.Y].Add(
-                        new Cell(
-                            parentDoc:  this,
-                            xPosition:  cell.X,
-                            yPosition:  cell.Y,
-                            data:       string.Empty,
-                            quote:      quoteChar));
-                }
-
-                lines[vertical ? cell.X : cell.Y].Insert(vertical ? cell.Y : cell.X, cell);
-            }
-
-            return lines;
+            return rowNumber < limit;
         }
     }
 }

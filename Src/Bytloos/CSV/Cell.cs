@@ -1,101 +1,54 @@
-﻿using System;
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 using System.Linq;
 
 namespace Bytloos.CSV
 {
-    /// <inheritdoc />
     /// <summary>
     /// CSV data cell.
     /// </summary>
-    public class Cell : ICloneable
+    public class Cell
     {
         internal const char DEFAULT_DELIMITER = ';';
         internal const char DEFAULT_QUOTE = '\"';
         internal const char ALTERNATIVE_QUOTE = '\'';
 
-        private readonly bool swapQuotes;
-        private readonly int commonX;
-        private readonly int commonY;
-        private readonly char delimiter;
-        private readonly char quote;
-        private readonly CSVDocument parentDoc;
+        private readonly CSVOptions options;
 
         /// <summary>
         /// Creates Cell object.
         /// </summary>
-        /// <param name="parentDoc">Reference to a document that contains cell.</param>
-        /// <param name="xPosition">Horizontal position.</param>
-        /// <param name="yPosition">Vertical position.</param>
         /// <param name="data">Text.</param>
         /// <param name="dataParsing">Data parsing condition.</param>
-        /// <param name="swapQuotes">>Swap quotes between " and ' if cell contains ones.</param>
-        /// <param name="delimiter">Delimiter.</param>
-        /// <param name="quote">Quote char.</param>
-        public Cell(
-            CSVDocument parentDoc,
-            int         xPosition,
-            int         yPosition,
-            string      data,
-            bool        dataParsing = false,
-            bool        swapQuotes = false,
-            char        delimiter   = DEFAULT_DELIMITER,
-            char        quote       = DEFAULT_QUOTE)
+        /// <param name="options"></param>
+        private Cell(string data, bool dataParsing, CSVOptions options)
         {
-            this.parentDoc = parentDoc;
-            this.delimiter = delimiter;
-            this.quote = quote;
-            this.swapQuotes = swapQuotes;
-
-            Data = dataParsing ? Parse(data) : data;
-
-            commonX = X = xPosition;
-            commonY = Y = yPosition;
-        }
-
-        /// <summary>
-        /// Horizontal position.
-        /// </summary>
-        public int X
-        {
-            get; private set;
-        }
-
-        /// <summary>
-        /// Vertical position.
-        /// </summary>
-        public int Y
-        {
-            get; private set;
+            this.options = options;
+            Data = dataParsing ? ParseData(data) : data;
         }
 
         /// <summary>
         /// Text.
         /// </summary>
-        public string Data
-        {
-            get; set;
-        }
+        public string Data { get; set; }
 
         /// <summary>
-        /// First cell of column.
+        /// Horizontal position.
         /// </summary>
-        public Cell ColumnKey
-        {
-            get { return parentDoc.Columns[commonX].First(); }
-        }
+        internal int X { get; set; }
 
         /// <summary>
-        /// First cell of row.
+        /// Vertical position.
         /// </summary>
-        public Cell RowKey
-        {
-            get { return parentDoc.Rows[commonY].First(); }
-        }
+        internal int Y { get; set; }
+
+        /// <summary>
+        /// Document reference.
+        /// </summary>
+        internal CSVDocument ParentDoc { get; set; }
 
         private string EscapedQuote
         {
-            get { return $"{quote}{quote}"; }
+            get { return $"{options.QuoteChar}{options.QuoteChar}"; }
         }
 
         private string EscapedData
@@ -111,15 +64,6 @@ namespace Bytloos.CSV
         }
 
         /// <summary>
-        /// Gets memberwise clone.
-        /// </summary>
-        /// <returns>Memberwise clone.</returns>
-        public object Clone()
-        {
-            return MemberwiseClone();
-        }
-
-        /// <summary>
         /// Gets escaped string representation of cell.
         /// </summary>
         /// <returns>Escaped string representation of cell.</returns>
@@ -128,43 +72,42 @@ namespace Bytloos.CSV
             return EscapedData;
         }
 
-        internal void MovePosition(int xPosition, int yPosition)
+        internal static Cell Parse(string cellString, CSVOptions options)
         {
-            X = xPosition;
-            Y = yPosition;
+            return new Cell(cellString, true, options);
         }
 
-        private string Parse(string cellString)
+        private string ParseData(string cellString)
         {
             if (string.IsNullOrEmpty(cellString))
                 return cellString;
 
-            return cellString.First() == quote && cellString.Last() == quote
-                ? cellString.Trim(quote).Replace(EscapedQuote, quote.ToString())
+            return cellString.First() == options.QuoteChar && cellString.Last() == options.QuoteChar
+                ? cellString.Trim(options.QuoteChar).Replace(EscapedQuote, options.QuoteChar.ToString())
                 : cellString;
         }
 
         private string EscapeQuotes(string input)
         {
-            if (swapQuotes)
+            if (options.SwapQuotes)
             {
-                var newQuote = quote == ALTERNATIVE_QUOTE ? DEFAULT_QUOTE : ALTERNATIVE_QUOTE;
-                var oldQuote = quote == DEFAULT_QUOTE ? DEFAULT_QUOTE : ALTERNATIVE_QUOTE;
+                var newQuote = options.QuoteChar == ALTERNATIVE_QUOTE ? DEFAULT_QUOTE : ALTERNATIVE_QUOTE;
+                var oldQuote = options.QuoteChar == DEFAULT_QUOTE ? DEFAULT_QUOTE : ALTERNATIVE_QUOTE;
 
                 if (newQuote != oldQuote)
                     return input.Replace(oldQuote.ToString(), newQuote.ToString());
             }
 
-            return input.Replace(quote.ToString(), EscapedQuote);
+            return input.Replace(options.QuoteChar.ToString(), EscapedQuote);
         }
 
         private string ChooseQuotes(string input)
         {
-            if (input.Contains(delimiter.ToString()) ||
-                input.Contains(quote.ToString()) ||
+            if (input.Contains(options.Delimiter.ToString()) ||
+                input.Contains(options.QuoteChar.ToString()) ||
                 input.Contains(DEFAULT_QUOTE.ToString()))
             {
-                return quote.ToString();
+                return options.QuoteChar.ToString();
             }
 
             return string.Empty;
