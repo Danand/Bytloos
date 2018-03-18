@@ -1,4 +1,4 @@
-# Bytloos (aka Bydlo Tools) – essential bydlocoding kit.
+# Bytloos (aka Bydlo Tools) – essential bydlocoding kit
 ## Definition
 *Bydlo* in some Slavic languages means large crowd of working class people.  
 The bydlocoding literally stands for codecrafting for small business needs. It's generally cheap, fast and based on reinvented wheels.
@@ -11,7 +11,7 @@ So there are some tools for more flexible bydlocoding development:
 * and some useful extension methods and utilities.
 
 ## Examples
-*Coming soon...*
+:construction: *Coming soon...* :construction:
 
 ## Downloads
-* [for >= .NET Framework 4.0 (full)](https://github.com/Danand/Bytloos/releases/download/3.1.0/Bytloos_v3.1.0.zip).
+* [Latest](https://github.com/Danand/Bytloos/releases/download/3.1.0/Bytloos_v3.1.0.zip).
