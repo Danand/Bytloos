@@ -152,6 +152,28 @@ namespace Bytloos.Tests.CSV
             Assert.AreEqual(expectedValue, value);
         }
 
+        [TestCase("123;456;789\r\nasd;fgh;jkl", "123", true)]
+        [TestCase("123;456;789\r\nasd;fgh;jkl", "asd", true)]
+        [TestCase("123;456;789\r\nasd;fgh;jkl", "xyz", false)]
+        public void CheckRowsHasKey(string text, string rowKey, bool expectedValue)
+        {
+            var csvDocument = CSVDocument.LoadFromString(text);
+            var value = csvDocument.Rows.HasKey(rowKey);
+
+            Assert.AreEqual(expectedValue, value);
+        }
+
+        [TestCase("123;456;789\r\nasd;fgh;jkl", "123", true)]
+        [TestCase("123;456;789\r\nasd;fgh;jkl", "asd", true)]
+        [TestCase("123;456;789\r\nasd;fgh;jkl", "xyz", false)]
+        public void TryGetRow(string text, string rowKey, bool expectedValue)
+        {
+            var csvDocument = CSVDocument.LoadFromString(text);
+            var value = csvDocument.Rows.TryGetRow(rowKey, out var row);
+
+            Assert.AreEqual(expectedValue, value);
+        }
+
         [TestCase(1, 3, 1, "qwe", "rty", "uio")]
         [TestCase(2, 5, 2, "qwe", "rty", "uio", "zxc", "vbn")]
         public void AppendRow(int expectedRowCount, int expectedColumnCount, int iterations, params string[] values)
