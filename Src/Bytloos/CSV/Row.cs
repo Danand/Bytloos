@@ -58,6 +58,24 @@ namespace Bytloos.CSV
             return cells.GetEnumerator();
         }
 
+        /// <summary>
+        /// Returns cells contain given string.
+        /// </summary>
+        /// <param name="value">Specified string.</param>
+        public IEnumerable<Cell> CellsContain(string value)
+        {
+            return cells.Where(cell => cell.Data.Contains(value));
+        }
+
+        /// <summary>
+        /// Returns cells start with given string.
+        /// </summary>
+        /// <param name="value">Specified string.</param>
+        public IEnumerable<Cell> CellsStartWith(string value)
+        {
+            return cells.Where(cell => cell.Data.StartsWith(value, StringComparison.Ordinal));
+        }
+
         IEnumerator IEnumerable.GetEnumerator()
         {
             return cells.GetEnumerator();
