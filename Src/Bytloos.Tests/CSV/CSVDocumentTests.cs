@@ -125,9 +125,9 @@ namespace Bytloos.Tests.CSV
         {
             var csvDocument = CSVDocument.LoadFromString(text);
             var row = csvDocument.Rows[rowIndex];
-            var value = row[valueIndex].Data;
+            var actualValue = row[valueIndex].Data;
 
-            Assert.AreEqual(expectedValue, value);
+            Assert.AreEqual(expectedValue, actualValue);
         }
 
         [TestCase("123;456;789\r\nasd;fgh;jkl", "asd", 1, "fgh")]
@@ -136,9 +136,9 @@ namespace Bytloos.Tests.CSV
         {
             var csvDocument = CSVDocument.LoadFromString(text);
             var row = csvDocument.Rows[rowKey];
-            var value = row[valueIndex].Data;
+            var actualValue = row[valueIndex].Data;
 
-            Assert.AreEqual(expectedValue, value);
+            Assert.AreEqual(expectedValue, actualValue);
         }
 
         [TestCase("123;456;789\r\nasd;fgh;jkl", "asd", "456", "fgh")]
@@ -147,9 +147,9 @@ namespace Bytloos.Tests.CSV
         {
             var csvDocument = CSVDocument.LoadFromString(text);
             var row = csvDocument.Rows[rowKey];
-            var value = row[columnKey].Data;
+            var actualValue = row[columnKey].Data;
 
-            Assert.AreEqual(expectedValue, value);
+            Assert.AreEqual(expectedValue, actualValue);
         }
 
         [TestCase("123;456;789\r\nasd;fgh;jkl", "123", true)]
@@ -158,9 +158,8 @@ namespace Bytloos.Tests.CSV
         public void CheckRowsHasKey(string text, string rowKey, bool expectedValue)
         {
             var csvDocument = CSVDocument.LoadFromString(text);
-            var value = csvDocument.Rows.HasKey(rowKey);
-
-            Assert.AreEqual(expectedValue, value);
+            var actualValue = csvDocument.Rows.HasKey(rowKey);
+            Assert.AreEqual(expectedValue, actualValue);
         }
 
         [TestCase("123;456;789\r\nasd;fgh;jkl", "123", true)]
@@ -169,9 +168,8 @@ namespace Bytloos.Tests.CSV
         public void TryGetRow(string text, string rowKey, bool expectedValue)
         {
             var csvDocument = CSVDocument.LoadFromString(text);
-            var value = csvDocument.Rows.TryGetRow(rowKey, out var row);
-
-            Assert.AreEqual(expectedValue, value);
+            var actualValue = csvDocument.Rows.TryGetRow(rowKey, out var row);
+            Assert.AreEqual(expectedValue, actualValue);
         }
 
         [TestCase(1, 3, 1, "qwe", "rty", "uio")]

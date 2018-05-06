@@ -38,10 +38,7 @@ namespace Bytloos.CSV
         /// <param name="index">Row index.</param>
         public Row this[int index]
         {
-            get
-            {
-                return new Row(cellsDict[index]);
-            }
+            get { return new Row(cellsDict[index]); }
         }
 
         /// <summary>
@@ -53,7 +50,6 @@ namespace Bytloos.CSV
             get
             {
                 var keyCells = GetKeyCells();
-
                 var keyCell = keyCells.FirstOrDefault(cell => cell.Data == key);
 
                 if (keyCell == default(Cell))
@@ -89,7 +85,6 @@ namespace Bytloos.CSV
             row = null;
 
             var keyCells = GetKeyCells();
-
             var keyCell = keyCells.FirstOrDefault(cell => cell.Data == key);
 
             if (keyCell == default(Cell))

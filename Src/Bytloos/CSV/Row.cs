@@ -42,7 +42,6 @@ namespace Bytloos.CSV
             {
                 // TODO: Crutchy. Replace ParentDoc.GetColumnKeyCells() with ParentDoc.Columns.GetKeyCells().
                 var keyCells = cells.First().ParentDoc.GetColumnKeyCells();
-
                 var keyCell = keyCells.FirstOrDefault(cell => cell.Data == key);
 
                 if (keyCell == default(Cell))
