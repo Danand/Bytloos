@@ -124,9 +124,9 @@ namespace Bytloos.CSV
                 yield return this[i];
         }
 
-        private IEnumerable<Cell> GetLine(Cell keyCell)
+        private List<Cell> GetLine(Cell keyCell)
         {
-            return cells.Where(cell => cell.Y == keyCell.Y);
+            return cells.Where(cell => cell.Y == keyCell.Y).ToList();
         }
 
         private int CalcCount()
