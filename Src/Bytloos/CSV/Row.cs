@@ -8,9 +8,9 @@ namespace Bytloos.CSV
     /// <inheritdoc />
     public class Row : IEnumerable<Cell>
     {
-        private readonly List<Cell> cells;
+        private readonly IEnumerable<Cell> cells;
 
-        internal Row(List<Cell> cells)
+        internal Row(IEnumerable<Cell> cells)
         {
             this.cells = cells;
         }
