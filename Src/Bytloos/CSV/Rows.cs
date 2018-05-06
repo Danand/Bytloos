@@ -8,9 +8,10 @@ namespace Bytloos.CSV
     /// <inheritdoc />
     public class Rows : IEnumerable<Row>
     {
-        protected readonly List<Cell> cells;
+        private readonly List<Cell> cells;
+        private readonly Cached<int> cachedCount = new Cached<int>();
 
-        private Dictionary<int, List<Cell>> cellsDict; // Prefomance experiment.
+        private Dictionary<int, List<Cell>> cellsDict; // Perfomance experiment.
 
         internal Rows(List<Cell> cells)
         {
@@ -23,13 +24,7 @@ namespace Bytloos.CSV
         /// </summary>
         public int Count
         {
-            get
-            {
-                if (!cells.Any())
-                    return 0;
-
-                return cells.Max(cell => cell.Y) + 1;
-            }
+            get { return cachedCount.PassValue(cachedCount.NeedsUpdate ? CalcCount() : cachedCount.Value); }
         }
 
         /// <summary>
@@ -115,18 +110,28 @@ namespace Bytloos.CSV
                 cells.Add(newCell);
             }
 
-            UpdateCellsDict();
-        }
+            cachedCount.MarkNeedsUpdate();
 
-        protected List<Cell> GetLine(Cell keyCell)
-        {
-            return cells.Where(cell => cell.Y == keyCell.Y).ToList();
+            UpdateCellsDict();
         }
 
         IEnumerator IEnumerable.GetEnumerator()
         {
             for (var i = 0; i < Count; i++)
                 yield return this[i];
+        }
+
+        private List<Cell> GetLine(Cell keyCell)
+        {
+            return cells.Where(cell => cell.Y == keyCell.Y).ToList();
+        }
+
+        private int CalcCount()
+        {
+            if (!cells.Any())
+                return 0;
+
+            return cells.Max(cell => cell.Y) + 1;
         }
 
         private void UpdateCellsDict()
