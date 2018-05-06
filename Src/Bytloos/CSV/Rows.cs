@@ -10,13 +10,12 @@ namespace Bytloos.CSV
     {
         private readonly List<Cell> cells;
         private readonly Cached<int> cachedCount = new Cached<int>();
-
-        private Dictionary<int, List<Cell>> cellsDict; // Perfomance experiment.
+        private readonly Cached<Dictionary<int, List<Cell>>> cachedCellsDict = new Cached<Dictionary<int, List<Cell>>>();
 
         internal Rows(List<Cell> cells)
         {
             this.cells = cells;
-            UpdateCellsDict();
+            GetCellsDict();
         }
 
         /// <summary>
@@ -24,7 +23,7 @@ namespace Bytloos.CSV
         /// </summary>
         public int Count
         {
-            get { return cachedCount.PassValue(cachedCount.NeedsUpdate ? CalcCount() : cachedCount.Value); }
+            get { return cachedCount.PassValue(CalcCount); }
         }
 
         /// <summary>
@@ -33,7 +32,12 @@ namespace Bytloos.CSV
         /// <param name="index">Row index.</param>
         public Row this[int index]
         {
-            get { return new Row(cellsDict[index]); }
+            get { return new Row(CellsDict[index]); }
+        }
+
+        private Dictionary<int, List<Cell>> CellsDict
+        {
+            get { return cachedCellsDict.PassValue(GetCellsDict); }
         }
 
         /// <summary>
@@ -111,8 +115,7 @@ namespace Bytloos.CSV
             }
 
             cachedCount.MarkNeedsUpdate();
-
-            UpdateCellsDict();
+            cachedCellsDict.MarkNeedsUpdate();
         }
 
         IEnumerator IEnumerable.GetEnumerator()
@@ -134,9 +137,9 @@ namespace Bytloos.CSV
             return cells.Max(cell => cell.Y) + 1;
         }
 
-        private void UpdateCellsDict()
+        private Dictionary<int, List<Cell>> GetCellsDict()
         {
-            cellsDict = cells.GroupBy(cell => cell.Y).ToDictionary(group => group.Key, group => group.ToList());
+            return cells.GroupBy(cell => cell.Y).ToDictionary(group => group.Key, group => group.ToList());
         }
     }
 }

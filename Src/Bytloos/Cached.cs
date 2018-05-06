@@ -1,4 +1,6 @@
-﻿namespace Bytloos
+﻿using System;
+
+namespace Bytloos
 {
     internal class Cached<T>
     {
@@ -11,12 +13,13 @@
             NeedsUpdate = true;
         }
 
-        public T PassValue(T value)
+        public T PassValue(Func<T> valueUpdating)
         {
-            Value = value;
-
             if (NeedsUpdate)
+            {
+                Value = valueUpdating.Invoke();
                 NeedsUpdate = false;
+            }
 
             return Value;
         }
