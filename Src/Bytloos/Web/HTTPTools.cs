@@ -645,7 +645,7 @@ namespace Bytloos.Web
             if (exception is WebException webException)
             {
                 var response = webException.Response;
-                var responseStream = response.GetResponseStream() ?? throw new InvalidOperationException();
+                var responseStream = response?.GetResponseStream() ?? throw webException;
 
                 encoding = DetectEncoding(encoding, (HttpWebResponse)response);
 
