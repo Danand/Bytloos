@@ -18,12 +18,11 @@ namespace Bytloos.CSV
         /// Creates Cell object.
         /// </summary>
         /// <param name="data">Text.</param>
-        /// <param name="dataParsing">Data parsing condition.</param>
         /// <param name="options"></param>
-        private Cell(string data, bool dataParsing, CSVOptions options)
+        private Cell(string data, CSVOptions options)
         {
             this.options = options;
-            Data = dataParsing ? ParseData(data) : data;
+            Data = ParseData(data);
         }
 
         /// <summary>
@@ -74,13 +73,13 @@ namespace Bytloos.CSV
 
         internal static Cell Parse(string cellString, CSVOptions options)
         {
-            return new Cell(cellString, true, options);
+            return new Cell(cellString, options);
         }
 
         private string ParseData(string cellString)
         {
             if (string.IsNullOrEmpty(cellString))
-                return cellString;
+                return string.Empty;
 
             return cellString.First() == options.QuoteChar && cellString.Last() == options.QuoteChar
                 ? cellString.Trim(options.QuoteChar).Replace(EscapedQuote, options.QuoteChar.ToString())
