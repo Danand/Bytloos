@@ -59,12 +59,13 @@ namespace Bytloos.Extensions
         /// <param name="source">Source object.</param>
         /// <param name="size">Size of each part.</param>
         /// <returns>enumerable collections splitted by size.</returns>
-        public static IEnumerable<IEnumerable<T>> Batch<T>(this IEnumerable<T> source, int size)
+        public static List<List<T>> Batch<T>(this List<T> source, int size)
         {
             return source
                 .Select((item, index) => new { item, index })
                 .GroupBy(item => item.index / size)
-                .Select(group => group.Select(x => x.item));
+                .Select(group => group.Select(x => x.item).ToList())
+                .ToList();
         }
 
         /// <summary>
