@@ -8,14 +8,15 @@ namespace Bytloos.CSV
     /// <inheritdoc />
     public class Rows : IEnumerable<Row>
     {
-        protected readonly List<Cell> cells;
-
-        private Dictionary<int, List<Cell>> cellsDict; // Prefomance experiment.
+        private readonly List<Cell> cells;
+        private readonly Cached<int> cachedCount = new Cached<int>();
+        private readonly Cached<Dictionary<int, List<Cell>>> cachedCellsDict = new Cached<Dictionary<int, List<Cell>>>();
+        private readonly Cached<Dictionary<string, Cell>> cachedKeyCells = new Cached<Dictionary<string, Cell>>();
 
         internal Rows(List<Cell> cells)
         {
             this.cells = cells;
-            UpdateCellsDict();
+            GetCellsDict();
         }
 
         /// <summary>
@@ -23,13 +24,7 @@ namespace Bytloos.CSV
         /// </summary>
         public int Count
         {
-            get
-            {
-                if (!cells.Any())
-                    return 0;
-
-                return cells.Max(cell => cell.Y) + 1;
-            }
+            get { return cachedCount.PassValue(CalcCount); }
         }
 
         /// <summary>
@@ -38,7 +33,17 @@ namespace Bytloos.CSV
         /// <param name="index">Row index.</param>
         public Row this[int index]
         {
-            get { return new Row(cellsDict[index]); }
+            get { return new Row(CellsDict[index]); }
+        }
+
+        private Dictionary<int, List<Cell>> CellsDict
+        {
+            get { return cachedCellsDict.PassValue(GetCellsDict); }
+        }
+
+        internal Dictionary<string, Cell> KeyCells
+        {
+            get { return cachedKeyCells.PassValue(GetKeyCells); }
         }
 
         /// <summary>
@@ -49,10 +54,7 @@ namespace Bytloos.CSV
         {
             get
             {
-                var keyCells = GetKeyCells();
-                var keyCell = keyCells.FirstOrDefault(cell => cell.Data == key);
-
-                if (keyCell == default(Cell))
+                if (!KeyCells.TryGetValue(key, out var keyCell))
                     throw new ArgumentOutOfRangeException(nameof(key));
 
                 return new Row(GetLine(keyCell));
@@ -72,8 +74,7 @@ namespace Bytloos.CSV
         /// <param name="key">Row key by first row cell.</param>
         public bool HasKey(string key)
         {
-            var keyCells = GetKeyCells();
-            return keyCells.Any(cell => cell.Data == key);
+            return KeyCells.ContainsKey(key);
         }
 
         /// <summary>
@@ -84,20 +85,12 @@ namespace Bytloos.CSV
         {
             row = null;
 
-            var keyCells = GetKeyCells();
-            var keyCell = keyCells.FirstOrDefault(cell => cell.Data == key);
-
-            if (keyCell == default(Cell))
+            if (!KeyCells.TryGetValue(key, out var keyCell))
                 return false;
 
             row = new Row(GetLine(keyCell));
 
             return true;
-        }
-
-        internal IEnumerable<Cell> GetKeyCells()
-        {
-            return cells.Where(cell => cell.X == 0);
         }
 
         internal void Append(IEnumerable<Cell> newCells)
@@ -115,12 +108,9 @@ namespace Bytloos.CSV
                 cells.Add(newCell);
             }
 
-            UpdateCellsDict();
-        }
-
-        protected List<Cell> GetLine(Cell keyCell)
-        {
-            return cells.Where(cell => cell.Y == keyCell.Y).ToList();
+            cachedCount.MarkNeedsUpdate();
+            cachedCellsDict.MarkNeedsUpdate();
+            cachedKeyCells.MarkNeedsUpdate();
         }
 
         IEnumerator IEnumerable.GetEnumerator()
@@ -129,9 +119,31 @@ namespace Bytloos.CSV
                 yield return this[i];
         }
 
-        private void UpdateCellsDict()
+        private Dictionary<string, Cell> GetKeyCells()
         {
-            cellsDict = cells.GroupBy(cell => cell.Y).ToDictionary(group => group.Key, group => group.ToList());
+            return cells
+                .Where(cell => cell.X == 0)
+                .GroupBy(cell => cell.Data)
+                .Select(group => group.First())
+                .ToDictionary(cell => cell.Data, cell => cell);
+        }
+
+        private List<Cell> GetLine(Cell keyCell)
+        {
+            return cells.Where(cell => cell.Y == keyCell.Y).ToList();
+        }
+
+        private int CalcCount()
+        {
+            if (!cells.Any())
+                return 0;
+
+            return cells.Max(cell => cell.Y) + 1;
+        }
+
+        private Dictionary<int, List<Cell>> GetCellsDict()
+        {
+            return cells.GroupBy(cell => cell.Y).ToDictionary(group => group.Key, group => group.ToList());
         }
     }
 }

@@ -55,6 +55,7 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Cached.cs" />
     <Compile Include="CSV\CSVOptions.cs" />
     <Compile Include="CSV\Row.cs" />
     <Compile Include="CSV\Rows.cs" />

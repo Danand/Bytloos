@@ -16,8 +16,6 @@ using static Bytloos.Web.HTTPContentTypes;
 
 namespace Bytloos.Web
 {
-    
-
     /// <summary>
     /// Simple HTTP client.
     /// </summary>
@@ -30,7 +28,7 @@ namespace Bytloos.Web
         /// </summary>
         public event OnStreamReading StreamReading = delegate {};
 
-        private const int       DEFAULT_BUFFER_SIZE             = 2048;
+        private const int       DEFAULT_BUFFER_SIZE             = 4096;
         private const int       MULTIPART_BOUNDARY_LINE_LENGTH  = 28;
         private const string    DEFAULT_URL                     = "http://localhost";
         private const string    DEFAULT_POST_CONTENT_TYPE       = "application/x-www-form-urlencoded";
@@ -645,7 +643,14 @@ namespace Bytloos.Web
             if (exception is WebException webException)
             {
                 var response = webException.Response;
-                var responseStream = response.GetResponseStream() ?? throw new InvalidOperationException();
+
+                if (response == null)
+                    return false;
+
+                var responseStream = response.GetResponseStream();
+
+                if (responseStream == null)
+                    return false;
 
                 encoding = DetectEncoding(encoding, (HttpWebResponse)response);
 

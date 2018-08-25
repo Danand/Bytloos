@@ -8,11 +8,13 @@ namespace Bytloos.CSV
     /// <inheritdoc />
     public class Row : IEnumerable<Cell>
     {
+        private readonly CSVDocument parentDoc;
         private readonly List<Cell> cells;
 
         internal Row(List<Cell> cells)
         {
             this.cells = cells;
+            parentDoc = cells.First().ParentDoc;
         }
 
         /// <summary>
@@ -40,11 +42,8 @@ namespace Bytloos.CSV
         {
             get
             {
-                // TODO: Crutchy. Replace ParentDoc.GetColumnKeyCells() with ParentDoc.Columns.GetKeyCells().
-                var keyCells = cells.First().ParentDoc.GetColumnKeyCells();
-                var keyCell = keyCells.FirstOrDefault(cell => cell.Data == key);
-
-                if (keyCell == default(Cell))
+                // TODO: Crutchy. Replace ParentDoc.ColumnKeyCells with ParentDoc.Columns.KeyCells.
+                if (!parentDoc.ColumnKeyCells.TryGetValue(key, out var keyCell))
                     throw new ArgumentOutOfRangeException(nameof(key));
 
                 return cells.First(cell => cell.X == keyCell.X);

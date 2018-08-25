@@ -12,6 +12,7 @@ namespace Bytloos.CSV
     {
         private readonly CSVOptions options;
         private readonly List<Cell> cells;
+        private readonly Cached<Dictionary<string, Cell>> cachedColumnKeyCells = new Cached<Dictionary<string, Cell>>();
 
         private CSVDocument(CSVOptions options)
         {
@@ -30,7 +31,15 @@ namespace Bytloos.CSV
         /// <summary>
         /// Rows of cells.
         /// </summary>
-        public Rows Rows { get; private set; }
+        public Rows Rows
+        {
+            get; private set;
+        }
+
+        internal Dictionary<string, Cell> ColumnKeyCells
+        {
+            get { return cachedColumnKeyCells.PassValue(GetColumnKeyCells); }
+        }
 
         /// <summary>
         /// Creates CSV document.
@@ -103,6 +112,7 @@ namespace Bytloos.CSV
         public void AppendRow(params string[] items)
         {
             Rows.Append(items.Select(item => Cell.Parse(item, options)));
+            cachedColumnKeyCells.MarkNeedsUpdate();
         }
 
         /// <summary>
@@ -134,6 +144,7 @@ namespace Bytloos.CSV
         public void Clear()
         {
             cells.Clear();
+            cachedColumnKeyCells.MarkNeedsUpdate();
         }
 
         /// <summary>
@@ -163,11 +174,8 @@ namespace Bytloos.CSV
             cells.AddRange(cleanCells);
 
             Rows = new Rows(cells);
-        }
 
-        internal IEnumerable<Cell> GetColumnKeyCells()
-        {
-            return cells.Where(cell => cell.Y == 0);
+            cachedColumnKeyCells.MarkNeedsUpdate();
         }
 
         private List<Cell> ParseCells(string text)
@@ -247,6 +255,15 @@ namespace Bytloos.CSV
                 return true;
 
             return rowNumber < limit;
+        }
+
+        private Dictionary<string, Cell> GetColumnKeyCells()
+        {
+            return cells
+                .Where(cell => cell.Y == 0)
+                .GroupBy(cell => cell.Data)
+                .Select(group => group.First())
+                .ToDictionary(cell => cell.Data, cell => cell);
         }
     }
 }
