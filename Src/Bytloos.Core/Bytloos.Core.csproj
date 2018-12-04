@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFrameworks>net472;net45;net40</TargetFrameworks>
-    <Version>3.2.0</Version>
+    <Version>3.2.1</Version>
     <Authors>Danand</Authors>
     <Copyright>Copyright © Danand 2018</Copyright>
     <PackageProjectUrl>https://github.com/Danand/Bytloos</PackageProjectUrl>

@@ -33,22 +33,22 @@ namespace Bytloos.Web
         private const string    DEFAULT_URL                     = "http://localhost";
         private const string    DEFAULT_POST_CONTENT_TYPE       = "application/x-www-form-urlencoded";
 
-        private const string DEFAULT_USER_AGENT
-            = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-                + "AppleWebKit/537.36 (KHTML, like Gecko) "
-                + "Chrome/61.0.3163.100 "
-                + "Safari/537.36 "
-                + "OPR/48.0.2685.52";
+        private const string DEFAULT_USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; WOW64) " + 
+                                                  "AppleWebKit/537.36 (KHTML, like Gecko) " + 
+                                                  "Chrome/69.0.3497.100 " +
+                                                  "Safari/537.36 " + 
+                                                  "OPR/56.0.3051.116";
 
-        private const string DEFAULT_ACCEPT
-            = "text/html, "
-                + "application/xml;q=0.9, "
-                + "application/xhtml+xml, "
-                + "image/png, "
-                + "image/webp, "
-                + "image/jpeg, "
-                + "image/gif, "
-                + "image/x-xbitmap, */*;q=0.1";
+        private const string DEFAULT_ACCEPT = "text/html, " + 
+                                              "application/xml;q=0.9, " + 
+                                              "application/xhtml+xml, " + 
+                                              "image/png, " + 
+                                              "image/webp, " + 
+                                              "image/jpeg, " + 
+                                              "image/gif, " + 
+                                              "image/x-xbitmap, " +
+                                              "*/*;" +
+                                              "q=0.1";
 
         private readonly Stopwatch stopWatch;
         private readonly HttpWebRequest defaultRequest;
@@ -61,6 +61,9 @@ namespace Bytloos.Web
         public HTTPTools()
         {
             SSLValidator.OverrideValidation();
+            ServicePointManager.DefaultConnectionLimit = int.MaxValue;
+            ServicePointManager.Expect100Continue = false;
+            WebRequest.DefaultWebProxy = null;
 
             stopWatch = new Stopwatch();
             Exceptions = new List<Exception>();
