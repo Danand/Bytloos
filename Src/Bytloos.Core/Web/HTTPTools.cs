@@ -22,6 +22,7 @@ namespace Bytloos.Web
     public class HTTPTools : ICloneable
     {
         public delegate void OnStreamReading(long currentBytes, long totalBytes);
+        public delegate void OnLog(string message);
 
         /// <summary>
         /// Current response stream reading progress.
@@ -138,6 +139,11 @@ namespace Bytloos.Web
         /// </summary>
         public List<Exception> Exceptions { get; }
 
+        /// <summary>
+        /// Log message delegate.
+        /// </summary>
+        public OnLog Logger { get; set; }
+
         /// <inheritdoc />
         /// <summary>
         /// Makes memberwise clone of object.
@@ -188,31 +194,34 @@ namespace Bytloos.Web
             {
                 BeginWatching();
 
+                LogArguments(nameof(Get), url, parameters, headers, options, encoding, tryTimes);
+
                 var queryString = ParseQuery(url);
                 var possibleQuery = BuildQuery(parameters);
+                var urlWithoutQuery = url.Split('?')[0];
 
-                url = url.Split('?')[0];
+                var urlPrepared = string.Format(
+                    "{0}{1}{2}{3}{4}",
+                    urlWithoutQuery,
+                    string.IsNullOrEmpty(queryString) && string.IsNullOrEmpty(possibleQuery)
+                        ? string.Empty
+                        : "?",
+                    queryString,
+                    !string.IsNullOrEmpty(queryString) && !string.IsNullOrEmpty(possibleQuery)
+                        ? "&"
+                        : string.Empty,
+                    possibleQuery);
 
-                var request
-                    = BuildRequest(
-                        string.Format(
-                            "{0}{1}{2}{3}{4}",
-                            url,
-                            string.IsNullOrEmpty(queryString) && string.IsNullOrEmpty(possibleQuery)
-                                ? string.Empty
-                                : "?",
-                            queryString,
-                            !string.IsNullOrEmpty(queryString) && !string.IsNullOrEmpty(possibleQuery)
-                                ? "&"
-                                : string.Empty,
-                            possibleQuery),
-                        headers,
-                        options);
+                Logger?.Invoke($"{nameof(Get)}(): urlPrepared = '{url}'");
+
+                var request = BuildRequest(urlPrepared, headers, options);
 
                 request.Method = "GET";
                 request.CookieContainer = cookies ?? Cookies;
 
                 Cookies = cookies ?? Cookies;
+
+                Logger?.Invoke($"{nameof(Get)}(): Cookies = '{Cookies}'");
 
                 return GetResponseString(request, encoding);
             }
@@ -262,8 +271,10 @@ namespace Bytloos.Web
             {
                 BeginWatching();
 
-                var postData = parameters != null ? BuildQuery(parameters) : rawData;
+                LogArguments(nameof(Post), url, parameters, headers, options, encoding, tryTimes);
+                Logger?.Invoke($"{nameof(Post)}(): rawData = '{rawData}'");
 
+                var postData = parameters != null ? BuildQuery(parameters) : rawData;
                 var request = BuildRequest(url, headers, options);
 
                 request.Method = "POST";
@@ -271,6 +282,8 @@ namespace Bytloos.Web
                 request.CookieContainer = cookies ?? Cookies;
 
                 Cookies = cookies ?? Cookies;
+
+                Logger?.Invoke($"{nameof(Post)}(): Cookies = '{Cookies}'");
 
                 var bytes = (encoding ?? Encoding.Default).GetBytes(postData ?? string.Empty);
 
@@ -329,10 +342,11 @@ namespace Bytloos.Web
             {
                 BeginWatching();
 
+                LogArguments(nameof(Multipart), url, parameters, headers, options, encoding, tryTimes);
+                Logger?.Invoke($"{nameof(Multipart)}(): rawData = '{rawData}'");
+
                 var boundary = new string('-', MULTIPART_BOUNDARY_LINE_LENGTH) + DateTime.Now.Ticks.ToString("x");
-
                 var postData = parameters != null ? BuildMultipartQuery(parameters, boundary, files) : rawData;
-
                 var request = BuildRequest(url, headers, options);
 
                 request.Method = "POST";
@@ -340,6 +354,8 @@ namespace Bytloos.Web
                 request.ContentType = "multipart/form-data; boundary=" + boundary;
 
                 Cookies = cookies ?? Cookies;
+
+                Logger?.Invoke($"{nameof(Multipart)}(): Cookies = '{Cookies}'");
 
                 var bytes = (encoding ?? Encoding.Default).GetBytes(postData ?? string.Empty);
 
@@ -584,7 +600,11 @@ namespace Bytloos.Web
         {
             var response = request.GetResponse(quietly: SilentMode);
 
+            Logger?.Invoke($"{nameof(GetResponseString)}(): response.StatusCode = {response.StatusCode}, response.StatusDescription = '{response.StatusDescription}'");
+
             encoding = DetectEncoding(encoding, response);
+
+            Logger?.Invoke($"{nameof(GetResponseString)}(): encoding = '{encoding?.EncodingName}'");
 
             var responseStream = response.GetResponseStream();
 
@@ -614,8 +634,10 @@ namespace Bytloos.Web
             memoryStream.Position = 0;
 
             var streamReader = new StreamReader(memoryStream, encoding);
-
             var content = streamReader.ReadToEnd();
+
+            if (response.StatusCode != HttpStatusCode.OK)
+                Logger?.Invoke($"{nameof(GetResponseString)}(): content = '{Environment.NewLine}{content}{Environment.NewLine}'");
 
             streamReader.Close();
             memoryStream.Close();
@@ -638,6 +660,8 @@ namespace Bytloos.Web
 
         private bool TryHandleWebException(Exception exception, Encoding encoding, out string content)
         {
+            Logger?.Invoke($"{nameof(GetResponseString)}(): exception = {Environment.NewLine}{exception.Message}{Environment.NewLine}{exception.StackTrace}{Environment.NewLine}");
+
             content = null;
 
             if (!SilentMode)
@@ -664,6 +688,23 @@ namespace Bytloos.Web
             }
 
             return false;
+        }
+
+        private void LogArguments(
+            string                      methodName,
+            string                      url,
+            Dictionary<string, string>  parameters,
+            List<HTTPHeader>            headers,
+            HTTPOptions                 options,
+            Encoding                    encoding,
+            int                         tryTimes)
+        {
+            Logger?.Invoke($"{methodName}(): url = '{url}'");
+            Logger?.Invoke($"{methodName}(): parameters = {(parameters == null ? "null" : $"['{string.Join(", ", parameters.Select(kv => $"{{{kv.Key}: {kv.Value}}}"))}]")}'");
+            Logger?.Invoke($"{methodName}(): headers = {(headers == null ? "null" : $"['{string.Join(", ", headers)}]")}'");
+            Logger?.Invoke($"{methodName}(): options = {(options == null ? "null" : $"['{string.Join(", ", options)}]")}'");
+            Logger?.Invoke($"{methodName}(): encoding = '{encoding?.EncodingName ?? "null"}'");
+            Logger?.Invoke($"{methodName}(): tryTimes = {tryTimes}");
         }
     }
 }

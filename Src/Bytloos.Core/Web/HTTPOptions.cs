@@ -26,5 +26,13 @@ namespace Bytloos.Web
         /// Proxy.
         /// </summary>
         public WebProxy Proxy { get; set; }
+
+        public override string ToString()
+        {
+            return $"AllowAutoRedirect = {AllowAutoRedirect}, " +
+                   $"Expect100Continue = {Expect100Continue}, " +
+                   $"Timeout = {Timeout}, " + 
+                   $"Proxy = {Proxy?.Address?.AbsolutePath}";
+        }
     }
 }

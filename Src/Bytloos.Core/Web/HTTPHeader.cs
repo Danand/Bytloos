@@ -41,5 +41,10 @@
         /// Value.
         /// </summary>
         public string Value { get; set; }
+
+        public override string ToString()
+        {
+            return $"PresetKey = {PresetKey}, CustomKey = '{CustomKey}', Value = '{Value}'";
+        }
     }
 }

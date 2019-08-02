@@ -2,9 +2,9 @@
 
   <PropertyGroup>
     <TargetFrameworks>net472;net45;net40</TargetFrameworks>
-    <Version>3.2.1</Version>
+    <Version>3.2.2</Version>
     <Authors>Danand</Authors>
-    <Copyright>Copyright © Danand 2018</Copyright>
+    <Copyright>Copyright © Danand 2019</Copyright>
     <PackageProjectUrl>https://github.com/Danand/Bytloos</PackageProjectUrl>
     <RepositoryUrl>https://github.com/Danand/Bytloos.git</RepositoryUrl>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
