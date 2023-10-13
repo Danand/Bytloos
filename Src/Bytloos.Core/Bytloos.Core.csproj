@@ -1,0 +1,24 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net472;net45;net40</TargetFrameworks>
+    <Version>3.2.2</Version>
+    <Authors>Danand</Authors>
+    <Copyright>Copyright © Danand 2019</Copyright>
+    <PackageProjectUrl>https://github.com/Danand/Bytloos</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/Danand/Bytloos.git</RepositoryUrl>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageId>Bytloos</PackageId>
+    <PackageLicenseUrl>https://github.com/Danand/Bytloos/blob/master/LICENSE.md</PackageLicenseUrl>
+    <Product>Bytloos</Product>
+    <RootNamespace>Bytloos</RootNamespace>
+    <AssemblyName>Bytloos</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="System.Web">
+      <HintPath>C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5\System.Web.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+</Project>
